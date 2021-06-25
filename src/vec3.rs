@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, Div, DivAssign, MulAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
@@ -38,9 +38,33 @@ impl AddAssign for Vec3 {
     }
 }
 
+impl Add<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn add(self, other: Vec3) -> Self::Output {
+        Self(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl Sub<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn sub(self, other: Vec3) -> Self::Output {
+        Self(self.0 - other.0, self.1 - other.1, self.2 - other.2)
+    }
+}
+
 impl MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, other: f32) {
         *self = Self(self.0 * other, self.1 * other, self.2 * other);
+    }
+}
+
+impl Mul<f32> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: f32) -> Self::Output {
+        Self(self.0 * other, self.1 * other, self.2 * other)
     }
 }
 
@@ -58,6 +82,6 @@ impl Div<f32> for Vec3 {
     }
 }
 
-pub fn unit_vector(v: Vec3) -> Vec3 {
-    v / v.length()
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    *v / v.length()
 }
