@@ -19,10 +19,23 @@ const VIEWPORT_HEIGHT: f32 = 2.0;
 const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
 const FOCAL_LENGTH: f32 = 1.0;
 
+fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> bool {
+    let oc = r.origin() - *center;
+    let a = r.direction().dot(&r.direction());
+    let b = oc.dot(&r.direction()) * 2.0;
+    let c = oc.dot(&oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
+
 fn ray_color(r: Ray) -> Color {
-    let unit_direction = vec3::unit_vector(r.direction());
+    if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, &r) {
+        return Vec3::new(1.0, 0.0, 0.0);
+    }
+    // Using `y` height _after_ normalizing gives a horizontal gradient
+    let unit_direction = vec3::unit_vector(&r.direction());
     let t = (unit_direction.1 + 1.0) * 0.5;
-    Vec3(1.0, 1.0, 1.0) * (1.0 - t) + Vec3(0.5, 0.7, 1.0) * t
+    Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
 }
 
 fn main() -> io::Result<()> {

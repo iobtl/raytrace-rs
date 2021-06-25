@@ -8,12 +8,12 @@ impl Ray {
         Ray(p, v)
     }
 
-    pub fn origin(&self) -> &Point3 {
-        &self.0
+    pub fn origin(&self) -> Point3 {
+        self.0
     }
 
-    pub fn direction(&self) -> &Vec3 {
-        &self.1
+    pub fn direction(&self) -> Vec3 {
+        self.1
     }
 
     pub fn at(&self, t: f32) -> Point3 {
