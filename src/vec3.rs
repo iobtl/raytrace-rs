@@ -4,12 +4,24 @@ pub type Point3 = Vec3;
 pub type Color = Vec3;
 
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct Vec3(pub f32, pub f32, pub f32);
+pub struct Vec3(f32, f32, f32);
 
 impl Vec3 {
     pub fn new(i1: f32, i2: f32, i3: f32) -> Self {
         Vec3(i1, i2, i3)
     }
+
+	pub fn x(&self) -> f32 {
+		self.0
+	}
+
+	pub fn y(&self) -> f32 {
+		self.1
+	}
+
+	pub fn z(&self) -> f32 {
+		self.2
+	}
 
     pub fn length(&self) -> f32 {
         self.length_squared().sqrt()

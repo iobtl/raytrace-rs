@@ -34,7 +34,7 @@ fn ray_color(r: Ray) -> Color {
     }
     // Using `y` height _after_ normalizing gives a horizontal gradient
     let unit_direction = vec3::unit_vector(&r.direction());
-    let t = (unit_direction.1 + 1.0) * 0.5;
+    let t = (unit_direction.y() + 1.0) * 0.5;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
 }
 
