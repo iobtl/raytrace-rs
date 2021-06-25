@@ -19,22 +19,31 @@ const VIEWPORT_HEIGHT: f32 = 2.0;
 const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
 const FOCAL_LENGTH: f32 = 1.0;
 
-fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> bool {
+fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> f32 {
+    // Solving for t in P(t) = A + tb => the equation for the ray `r`
     let oc = r.origin() - *center;
-    let a = r.direction().dot(&r.direction());
-    let b = oc.dot(&r.direction()) * 2.0;
+    let a = r.direction().length_squared();
+    let half_b = oc.dot(&r.direction());
     let c = oc.dot(&oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    let discriminant = half_b * half_b - a * c;
+
+    if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-half_b - discriminant.sqrt()) / a
+    }
 }
 
 fn ray_color(r: Ray) -> Color {
-    if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, &r) {
-        return Vec3::new(1.0, 0.0, 0.0);
+    let mut t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, &r);
+    if t > 0.0 {
+        let n = vec3::unit_vector(&(r.at(t) - Vec3::new(0.0, 0.0, -1.0)));
+        // Return normalized vector normal
+        return Vec3::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0) * 0.5;
     }
     // Using `y` height _after_ normalizing gives a horizontal gradient
     let unit_direction = vec3::unit_vector(&r.direction());
-    let t = (unit_direction.y() + 1.0) * 0.5;
+    t = (unit_direction.y() + 1.0) * 0.5;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
 }
 
