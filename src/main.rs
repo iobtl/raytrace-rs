@@ -1,5 +1,12 @@
 use std::io::{self, Write};
 
+pub mod color;
+pub mod vec3;
+
+use crate::color::write_color;
+use crate::vec3::Color;
+use crate::vec3::Vec3;
+
 const IMG_WIDTH: usize = 256;
 const IMG_HEIGHT: usize = 256;
 
@@ -11,18 +18,15 @@ fn main() -> io::Result<()> {
     for j in (0..IMG_HEIGHT).rev() {
         eprintln!("\rScanlines remaining: {}", j);
         for i in 0..IMG_WIDTH {
-            let r: f32 = (i as f32) / (IMG_WIDTH - 1) as f32;
-            let g: f32 = (j as f32) / (IMG_HEIGHT - 1) as f32;
-            let b = 0.25;
+            let pixel_color: Color = Vec3(
+                (i as f32) / ((IMG_WIDTH - 1) as f32),
+                (j as f32) / ((IMG_HEIGHT - 1) as f32),
+                0.25,
+            );
 
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-
-            stdout.write_all(format!("{} {} {}\n", ir, ig, ib).as_bytes())?;
+            write_color(&mut stdout, pixel_color)?;
         }
     }
-
     eprintln!("\nDone!\n");
     Ok(())
 }
