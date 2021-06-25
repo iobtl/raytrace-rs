@@ -11,17 +11,17 @@ impl Vec3 {
         Vec3(i1, i2, i3)
     }
 
-	pub fn x(&self) -> f32 {
-		self.0
-	}
+    pub fn x(&self) -> f32 {
+        self.0
+    }
 
-	pub fn y(&self) -> f32 {
-		self.1
-	}
+    pub fn y(&self) -> f32 {
+        self.1
+    }
 
-	pub fn z(&self) -> f32 {
-		self.2
-	}
+    pub fn z(&self) -> f32 {
+        self.2
+    }
 
     pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
