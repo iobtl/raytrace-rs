@@ -31,8 +31,8 @@ pub fn random_double_range(rng: &mut ThreadRng, min: f32, max: f32) -> f32 {
     min + (max - min) * random_double(rng)
 }
 
+// Reject points picked from unit cube until falls inside a unit sphere
 pub fn random_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
-    // Reject points picked from unit cube until falls inside a unit sphere
     let p = random_vec_range(rng, -1.0, 1.0);
 
     if p.length_squared() >= 1.0 {
@@ -49,7 +49,7 @@ pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
 pub fn random_in_hemipshere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_unit_sphere(rng);
     if in_unit_sphere.dot(normal) > 0.0 {
-        // In same hemisphere as normal (?)
+        // In same hemisphere as normal
         in_unit_sphere
     } else {
         -in_unit_sphere
