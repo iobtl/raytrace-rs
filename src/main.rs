@@ -21,19 +21,26 @@ const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMG_WIDTH: usize = 256;
 const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: i32 = 100;
+const MAX_DEPTH: i32 = 50;
 
-fn ray_color(r: Ray, world: &HittableList<Sphere>) -> Color {
-    match world.hit(&r, 0.0, INFINITY) {
-        Some(hit_rec) => {
-            let target = hit_rec.p + hit_rec.normal + random_unit_sphere(&mut rand::thread_rng());
-            let diffuse_ray = Ray::new(hit_rec.p, target - hit_rec.p);
-            ray_color(diffuse_ray, world) * 0.5
-        }
-        None => {
-            // Using `y` height _after_ normalizing gives a horizontal gradient
-            let unit_direction = vec3::unit_vector(&r.direction());
-            let t = (unit_direction.y() + 1.0) * 0.5;
-            Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
+    // Limit number of ray bounces
+    if depth <= 0 {
+        Vec3::new(0.0, 0.0, 0.0)
+    } else {
+        match world.hit(&r, 0.0, INFINITY) {
+            Some(hit_rec) => {
+                let target =
+                    hit_rec.p + hit_rec.normal + random_unit_sphere(&mut rand::thread_rng());
+                let diffuse_ray = Ray::new(hit_rec.p, target - hit_rec.p);
+                ray_color(diffuse_ray, world, depth - 1) * 0.5
+            }
+            None => {
+                // Using `y` height _after_ normalizing gives a horizontal gradient
+                let unit_direction = vec3::unit_vector(&r.direction());
+                let t = (unit_direction.y() + 1.0) * 0.5;
+                Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+            }
         }
     }
 }
@@ -62,7 +69,7 @@ fn main() -> io::Result<()> {
                 let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
                 let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
                 let r = camera.ray_at(u, v);
-                pixel_color += ray_color(r, &world);
+                pixel_color += ray_color(r, &world, MAX_DEPTH);
             }
             write_color(&mut stdout, pixel_color, SAMPLES_PER_PIXEL)?;
         }

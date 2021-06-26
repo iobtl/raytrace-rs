@@ -11,11 +11,11 @@ pub fn write_color(
     let mut g = pixel_color.y();
     let mut b = pixel_color.z();
 
-    // Divide color by number of samples
+    // Divide color by number of samples and gamma-correct for gamma=2.0
     let scale = 1.0 / (samples_per_pixel as f32);
-    r *= scale;
-    g *= scale;
-    b *= scale;
+    r = (scale * r).sqrt();
+    g = (scale * g).sqrt();
+    b = (scale * b).sqrt();
 
     // Write translated [0..255] value of each color component
     r = 256.0 * clamp(r, 0.0, 0.999);
