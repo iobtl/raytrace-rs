@@ -42,6 +42,11 @@ impl Vec3 {
             self.0 * other.1 - self.1 * other.0,
         )
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        (self.0.abs() < s) && (self.1.abs() < s) && (self.2.abs() < s)
+    }
 }
 
 impl AddAssign for Vec3 {
@@ -80,6 +85,14 @@ impl Mul<f32> for Vec3 {
     }
 }
 
+impl Mul<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: Vec3) -> Self::Output {
+        Self(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
 impl DivAssign<f32> for Vec3 {
     fn div_assign(&mut self, other: f32) {
         *self = Self(self.0 / other, self.1 / other, self.2 / other);
@@ -104,4 +117,9 @@ impl Neg for Vec3 {
 
 pub fn unit_vector(v: &Vec3) -> Vec3 {
     *v / v.length()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    let b = v.dot(n);
+    *v - (*n * b * 2.0)
 }

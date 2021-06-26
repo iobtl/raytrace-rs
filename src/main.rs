@@ -3,17 +3,19 @@ use std::io::{self, Write};
 pub mod camera;
 pub mod color;
 pub mod hittable;
+pub mod material;
 pub mod ray;
 pub mod sphere;
 pub mod utility;
 pub mod vec3;
 
 use hittable::HittableList;
+use material::Material;
 use ray::Ray;
 use sphere::Sphere;
 use vec3::{Color, Point3, Vec3};
 
-use crate::{camera::Camera, color::write_color};
+use crate::{camera::Camera, color::write_color, material::Surface};
 use utility::*;
 
 // Image dimensions
@@ -28,19 +30,17 @@ fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
     if depth <= 0 {
         Vec3::new(0.0, 0.0, 0.0)
     } else {
-        match world.hit(&r, 0.001, INFINITY) {
-            Some(hit_rec) => {
-                let target =
-                    hit_rec.p + random_in_hemipshere(&mut rand::thread_rng(), &hit_rec.normal);
-                let diffuse_ray = Ray::new(hit_rec.p, target - hit_rec.p);
-                ray_color(diffuse_ray, world, depth - 1) * 0.5
+        if let Some(hit_rec) = world.hit(&r, 0.001, INFINITY) {
+            if let Some((scattered, attenuation)) = hit_rec.material.scatter(&r, &hit_rec) {
+                attenuation * ray_color(scattered, world, depth - 1)
+            } else {
+                Vec3::new(0.0, 0.0, 0.0)
             }
-            None => {
-                // Using `y` height _after_ normalizing gives a horizontal gradient
-                let unit_direction = vec3::unit_vector(&r.direction());
-                let t = (unit_direction.y() + 1.0) * 0.5;
-                Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
-            }
+        } else {
+            // Using `y` height _after_ normalizing gives a horizontal gradient
+            let unit_direction = vec3::unit_vector(&r.direction());
+            let t = (unit_direction.y() + 1.0) * 0.5;
+            Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
         }
     }
 }
@@ -55,8 +55,15 @@ fn main() -> io::Result<()> {
 
     // World initialization
     let mut world: HittableList<Sphere> = HittableList::new();
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
-    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0));
+    let material_ground = Surface::Lambertian(Vec3::new(0.8, 0.8, 0.0));
+    let material_center = Surface::Lambertian(Vec3::new(0.7, 0.3, 0.3));
+    let material_left = Surface::Metal(Vec3::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = Surface::Metal(Vec3::new(0.8, 0.6, 0.2), 1.0);
+
+    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center));
+    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left));
+    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right));
 
     for j in (0..IMG_HEIGHT).rev() {
         eprintln!("\rScanlines remaining: {}", j);

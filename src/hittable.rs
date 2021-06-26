@@ -1,18 +1,20 @@
 use crate::{
+    material::Surface,
     ray::Ray,
     vec3::{Point3, Vec3},
 };
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: &'a Surface,
     pub t: f32,
     pub front_face: bool,
 }
 
-impl HitRecord {
-    pub fn new(p: Point3, normal: Vec3, t: f32, front_face: bool) -> Self {
-        HitRecord { p, normal, t, front_face }
+impl<'a> HitRecord<'a> {
+    pub fn new(p: Point3, normal: Vec3, t: f32, front_face: bool, material: &'a Surface) -> Self {
+        HitRecord { p, normal, material, t, front_face }
     }
 
     // Returns true if ray is incident from outside surface, false if from inside surface

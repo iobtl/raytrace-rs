@@ -1,5 +1,6 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Surface,
     ray::Ray,
     vec3::Point3,
 };
@@ -7,17 +8,18 @@ use crate::{
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    material: Surface,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Point3, radius: f32, material: Surface) -> Self {
+        Sphere { center, radius, material }
     }
 }
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
-        let oc = r.origin() - self.center;
+        let oc = *r.origin() - self.center;
         let a = r.direction().length_squared();
         let half_b = oc.dot(&r.direction());
         let c = oc.dot(&oc) - self.radius * self.radius;
@@ -42,7 +44,7 @@ impl Hittable for Sphere {
                 let t = root;
                 let normal = (p - self.center) / self.radius;
                 let front_face = HitRecord::face_normal(r, &normal);
-                Some(HitRecord::new(p, normal, t, front_face))
+                Some(HitRecord::new(p, normal, t, front_face, &self.material))
             }
         }
     }
