@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
@@ -91,6 +91,14 @@ impl Div<f32> for Vec3 {
 
     fn div(self, other: f32) -> Self::Output {
         Self(self.0 / other, self.1 / other, self.2 / other)
+    }
+}
+
+impl Neg for Vec3 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self(-self.0, -self.1, -self.2)
     }
 }
 

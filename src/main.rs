@@ -28,10 +28,10 @@ fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
     if depth <= 0 {
         Vec3::new(0.0, 0.0, 0.0)
     } else {
-        match world.hit(&r, 0.0, INFINITY) {
+        match world.hit(&r, 0.001, INFINITY) {
             Some(hit_rec) => {
                 let target =
-                    hit_rec.p + hit_rec.normal + random_unit_sphere(&mut rand::thread_rng());
+                    hit_rec.p + random_in_hemipshere(&mut rand::thread_rng(), &hit_rec.normal);
                 let diffuse_ray = Ray::new(hit_rec.p, target - hit_rec.p);
                 ray_color(diffuse_ray, world, depth - 1) * 0.5
             }

@@ -1,6 +1,6 @@
 use rand::{prelude::ThreadRng, Rng};
 
-use crate::vec3::Vec3;
+use crate::vec3::{self, Vec3};
 
 pub const INFINITY: f32 = f32::INFINITY;
 pub const PI: f32 = std::f32::consts::PI;
@@ -39,6 +39,20 @@ pub fn random_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
         random_unit_sphere(rng)
     } else {
         p
+    }
+}
+
+pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
+    vec3::unit_vector(&random_unit_sphere(rng))
+}
+
+pub fn random_in_hemipshere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
+    let in_unit_sphere = random_unit_sphere(rng);
+    if in_unit_sphere.dot(normal) > 0.0 {
+        // In same hemisphere as normal (?)
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
     }
 }
 
