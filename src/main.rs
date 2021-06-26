@@ -1,5 +1,6 @@
 use std::io::{self, Write};
 
+pub mod camera;
 pub mod color;
 pub mod hittable;
 pub mod ray;
@@ -12,18 +13,14 @@ use ray::Ray;
 use sphere::Sphere;
 use vec3::{Color, Point3, Vec3};
 
-use crate::color::write_color;
+use crate::{camera::Camera, color::write_color};
 use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMG_WIDTH: usize = 256;
 const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-
-// Camera
-const VIEWPORT_HEIGHT: f32 = 2.0;
-const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-const FOCAL_LENGTH: f32 = 1.0;
+const SAMPLES_PER_PIXEL: i32 = 100;
 
 fn ray_color(r: Ray, world: &HittableList<Sphere>) -> Color {
     match world.hit(&r, 0.0, INFINITY) {
@@ -42,12 +39,8 @@ fn main() -> io::Result<()> {
 
     stdout.write_all(format!("P3\n{} {}\n255\n", IMG_WIDTH, IMG_HEIGHT).as_bytes())?;
 
-    // Pre-defined vectors
-    let origin: Point3 = Vec3::new(0.0, 0.0, 0.0);
-    let horizontal: Vec3 = Vec3::new(VIEWPORT_WIDTH, 0.0, 0.0);
-    let vertical: Vec3 = Vec3::new(0.0, VIEWPORT_HEIGHT, 0.0);
-    let lower_left: Vec3 =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, FOCAL_LENGTH);
+    // Camera
+    let camera = Camera::new();
 
     // World initialization
     let mut world: HittableList<Sphere> = HittableList::new();
@@ -57,12 +50,15 @@ fn main() -> io::Result<()> {
     for j in (0..IMG_HEIGHT).rev() {
         eprintln!("\rScanlines remaining: {}", j);
         for i in 0..IMG_WIDTH {
-            let u = (i as f32) / ((IMG_WIDTH - 1) as f32);
-            let v = (j as f32) / ((IMG_HEIGHT - 1) as f32);
-            let r = Ray::new(origin, lower_left + horizontal * u + vertical * v - origin);
-            let pixel_color = ray_color(r, &world);
-
-            write_color(&mut stdout, pixel_color)?;
+            let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+            let mut rng = rand::thread_rng();
+            for _ in 0..SAMPLES_PER_PIXEL {
+                let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
+                let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
+                let r = camera.ray_at(u, v);
+                pixel_color += ray_color(r, &world);
+            }
+            write_color(&mut stdout, pixel_color, SAMPLES_PER_PIXEL)?;
         }
     }
     eprintln!("\nDone!\n");
