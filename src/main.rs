@@ -24,7 +24,11 @@ const SAMPLES_PER_PIXEL: i32 = 100;
 
 fn ray_color(r: Ray, world: &HittableList<Sphere>) -> Color {
     match world.hit(&r, 0.0, INFINITY) {
-        Some(hit_rec) => (hit_rec.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5,
+        Some(hit_rec) => {
+            let target = hit_rec.p + hit_rec.normal + random_unit_sphere(&mut rand::thread_rng());
+            let diffuse_ray = Ray::new(hit_rec.p, target - hit_rec.p);
+            ray_color(diffuse_ray, world) * 0.5
+        }
         None => {
             // Using `y` height _after_ normalizing gives a horizontal gradient
             let unit_direction = vec3::unit_vector(&r.direction());
@@ -52,6 +56,8 @@ fn main() -> io::Result<()> {
         for i in 0..IMG_WIDTH {
             let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
             let mut rng = rand::thread_rng();
+
+            // Anti-aliasing -- generating multiple rays per pixel
             for _ in 0..SAMPLES_PER_PIXEL {
                 let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
                 let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
