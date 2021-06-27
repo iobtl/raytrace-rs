@@ -34,7 +34,7 @@ impl Hittable for Sphere {
             // Finding the nearest root that lies in the acceptable range
             let mut root = (-half_b - sqrtd) / a;
             if root < tmin || tmax < root {
-                root = (-half_b - sqrtd) / a;
+                root = (-half_b + sqrtd) / a;
             }
 
             if root < tmin || tmax < root {
@@ -44,7 +44,13 @@ impl Hittable for Sphere {
                 let t = root;
                 let normal = (p - self.center) / self.radius;
                 let front_face = HitRecord::face_normal(r, &normal);
-                Some(HitRecord::new(p, normal, t, front_face, &self.material))
+
+                // Surface normal is always against the incident ray
+                if front_face {
+                    Some(HitRecord::new(p, normal, t, front_face, &self.material))
+                } else {
+                    Some(HitRecord::new(p, -normal, t, front_face, &self.material))
+                }
             }
         }
     }
