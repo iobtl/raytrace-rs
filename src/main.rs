@@ -1,4 +1,9 @@
-use std::io::{self, BufWriter, Write};
+use indicatif::{ProgressBar, ProgressIterator};
+use rayon::prelude::*;
+use std::{
+    fs::File,
+    io::{self, BufWriter, Write},
+};
 
 pub mod camera;
 pub mod color;
@@ -15,14 +20,14 @@ use ray::Ray;
 use sphere::Sphere;
 use vec3::{Color, Vec3};
 
-use crate::{camera::Camera, color::write_color, material::Surface};
+use crate::{camera::Camera, color::process_color, material::Surface};
 use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 3.0 / 2.0;
-const IMG_WIDTH: usize = 1200;
-const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: i32 = 50;
+const IMG_WIDTH: u32 = 1200;
+const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
+const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
@@ -110,25 +115,44 @@ fn main() -> io::Result<()> {
 
     // World initialization
     let world = random_scene();
+    let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
 
-    for j in (0..IMG_HEIGHT).rev() {
-        eprintln!("\rScanlines remaining: {}", j);
-        for i in 0..IMG_WIDTH {
-            let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-            let mut rng = rand::thread_rng();
+    let t0 = std::time::Instant::now();
+    let pb = ProgressBar::new(IMG_HEIGHT.into());
+    eprintln!("Tracing rays\n");
+    let scene: Vec<Vec<Vec3>> = height_range
+        .into_par_iter()
+        .map(|j| {
+            pb.inc(1);
+            (0..IMG_WIDTH)
+                .into_par_iter()
+                .map(|i| {
+                    let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+                    let mut rng = rand::thread_rng();
 
-            // Anti-aliasing -- generating multiple rays per pixel
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
-                let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
-                let r = camera.ray_at(u, v);
-                pixel_color += ray_color(r, &world, MAX_DEPTH);
-            }
-            write_color(&mut stream, pixel_color, SAMPLES_PER_PIXEL)?;
-        }
-    }
+                    // Anti-aliasing -- generating multiple rays per pixel
+                    for _ in 0..SAMPLES_PER_PIXEL {
+                        let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
+                        let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
+                        let r = camera.ray_at(u, v);
+                        pixel_color += ray_color(r, &world, MAX_DEPTH);
+                    }
+                    process_color(pixel_color, SAMPLES_PER_PIXEL)
+                })
+                .collect()
+        })
+        .collect();
 
-    stream.flush().unwrap();
+    let scene: Vec<Vec3> = scene.into_par_iter().flatten().collect();
+
+    eprintln!("\rWriting to file");
+    scene.iter().for_each(move |p| {
+        stream
+            .write(format!("{} {} {}\n", p.x() as i32, p.y() as i32, p.z() as i32).as_bytes())
+            .expect("Unable to write to file");
+    });
+
     eprintln!("\nDone!\n");
+    eprintln!("Time elapsed: {}s\n", t0.elapsed().as_secs_f64());
     Ok(())
 }
