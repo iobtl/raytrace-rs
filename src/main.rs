@@ -11,23 +11,23 @@ pub mod sphere;
 pub mod utility;
 pub mod vec3;
 
-use hittable::HittableList;
+use hittable::{Hittable, HittableList};
 use material::Material;
 use ray::Ray;
-use sphere::Sphere;
+use sphere::{MovingSphere, Sphere};
 use vec3::{Color, Vec3};
 
 use crate::{camera::Camera, color::process_color, material::Surface};
 use utility::*;
 
 // Image dimensions
-const ASPECT_RATIO: f32 = 3.0 / 2.0;
-const IMG_WIDTH: u32 = 1200;
+const ASPECT_RATIO: f32 = 16.0 / 9.0;
+const IMG_WIDTH: u32 = 400;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 500;
+const SAMPLES_PER_PIXEL: i32 = 100;
 const MAX_DEPTH: i32 = 50;
 
-fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
+fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color {
     // Limit number of ray bounces
     if depth <= 0 {
         Vec3::new(0.0, 0.0, 0.0)
@@ -47,14 +47,21 @@ fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
     }
 }
 
-fn random_scene() -> HittableList<Sphere> {
+fn random_scene() -> HittableList<MovingSphere> {
     let mut world = HittableList::new();
     let ground_material = Surface::Lambertian(Vec3::new(0.5, 0.5, 0.5));
     let material1 = Surface::Dielectric(1.5);
     let material2 = Surface::Lambertian(Vec3::new(0.4, 0.2, 0.1));
     let material3 = Surface::Metal(Vec3::new(0.7, 0.6, 0.5), 0.0);
 
-    world.add(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, ground_material));
+    world.add(MovingSphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        Vec3::new(0.0, -1000.0, 0.0),
+        0.0,
+        1.0,
+        1000.0,
+        ground_material,
+    ));
 
     let mut rng = rand::thread_rng();
     for a in -11..11 {
@@ -74,25 +81,48 @@ fn random_scene() -> HittableList<Sphere> {
                     // diffuse
                     let albedo = color::random() * color::random();
                     let sphere_material = Surface::Lambertian(albedo);
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+                    let center2 =
+                        center + Vec3::new(0.0, random_double_range(&mut rng, 0.0, 0.5), 0.0);
+                    world.add(MovingSphere::new(center, center2, 0.0, 1.0, 0.2, sphere_material));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(&mut rng, 0.0, 0.5);
                     let sphere_material = Surface::Metal(albedo, fuzz);
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+                    world.add(MovingSphere::new(center, center, 0.0, 1.0, 0.2, sphere_material));
                 } else {
                     // glass
                     let sphere_material = Surface::Dielectric(1.5);
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+                    world.add(MovingSphere::new(center, center, 0.0, 1.0, 0.2, sphere_material));
                 }
             }
         }
     }
 
-    world.add(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, material1));
-    world.add(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, material2));
-    world.add(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, material3));
+    world.add(MovingSphere::new(
+        Vec3::new(0.0, 1.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material1,
+    ));
+    world.add(MovingSphere::new(
+        Vec3::new(-4.0, 1.0, 0.0),
+        Vec3::new(-4.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material2,
+    ));
+    world.add(MovingSphere::new(
+        Vec3::new(4.0, 1.0, 0.0),
+        Vec3::new(4.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material3,
+    ));
 
     world
 }
@@ -108,7 +138,8 @@ fn main() -> io::Result<()> {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let aperture = 0.1;
-    let camera = Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus);
+    let camera =
+        Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // World initialization
     let world = random_scene();

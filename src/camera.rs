@@ -1,6 +1,6 @@
 use crate::{
     ray::Ray,
-    utility::{degrees_to_radians, random_unit_disk},
+    utility::{degrees_to_radians, random_double_range, random_unit_disk},
     vec3::{unit_vector, Point3, Vec3},
 };
 
@@ -13,6 +13,8 @@ pub struct Camera {
     v: Vec3,
     w: Vec3,
     lens_radius: f32,
+    t0: f32,
+    t1: f32,
 }
 
 impl Camera {
@@ -24,6 +26,8 @@ impl Camera {
         aspect_ratio: f32,
         aperture: f32,
         focus_dist: f32,
+        t0: f32,
+        t1: f32,
     ) -> Self {
         let theta = degrees_to_radians(vfov);
         let h = (theta / 2.0).tan();
@@ -40,13 +44,18 @@ impl Camera {
         let lower_left = origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
         let lens_radius = aperture / 2.0;
 
-        Camera { origin, lower_left, horizontal, vertical, u, v, w, lens_radius }
+        Camera { origin, lower_left, horizontal, vertical, u, v, w, lens_radius, t0, t1 }
     }
 
     pub fn ray_at(&self, s: f32, t: f32) -> Ray {
-        let Camera { origin, lower_left, horizontal, vertical, u, v, lens_radius, .. } = *self;
+        let Camera { origin, lower_left, horizontal, vertical, u, v, lens_radius, t0, t1, .. } =
+            *self;
         let rd = random_unit_disk(&mut rand::thread_rng()) * lens_radius;
         let offset = u * rd.x() + v * rd.y();
-        Ray::new(origin + offset, lower_left + horizontal * s + vertical * t - origin - offset)
+        Ray::new(
+            origin + offset,
+            lower_left + horizontal * s + vertical * t - origin - offset,
+            random_double_range(&mut rand::thread_rng(), t0, t1),
+        )
     }
 }

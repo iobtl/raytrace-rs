@@ -27,7 +27,7 @@ impl Material for Surface {
                     let scatter_direction = rec.normal;
                 }
 
-                let scattered = Ray::new(rec.p, scatter_direction);
+                let scattered = Ray::new(rec.p, scatter_direction, ray.time());
                 let attenuation = *albedo;
 
                 Some((scattered, attenuation))
@@ -37,6 +37,7 @@ impl Material for Surface {
                 let scattered = Ray::new(
                     rec.p,
                     reflected + random_unit_sphere(&mut rand::thread_rng()) * *fuzz,
+                    ray.time(),
                 );
                 let attenuation = *albedo;
 
@@ -61,7 +62,7 @@ impl Material for Surface {
                     refract(&unit_direction, &rec.normal, refraction_ratio)
                 };
 
-                let scattered = Ray::new(rec.p, direction);
+                let scattered = Ray::new(rec.p, direction, ray.time());
 
                 Some((scattered, attenuation))
             }
