@@ -7,8 +7,8 @@ Snapshot of [final render](final.ppm):
 ![image](https://user-images.githubusercontent.com/59901837/123538438-851ff700-d767-11eb-9e68-348f835efe89.png)
 
 ## Requirements
-rand: 0.8.4
+`rand`: 0.8.4
 
-rayon: 1.5
+`rayon`: 1.5
 
-indicatif: 0.16.2
+`indicatif`: 0.16.2
