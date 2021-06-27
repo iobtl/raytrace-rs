@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io::{self, BufWriter, Write};
 
 pub mod camera;
 pub mod color;
@@ -13,16 +13,16 @@ use hittable::HittableList;
 use material::Material;
 use ray::Ray;
 use sphere::Sphere;
-use vec3::{Color, Point3, Vec3};
+use vec3::{Color, Vec3};
 
 use crate::{camera::Camera, color::write_color, material::Surface};
 use utility::*;
 
 // Image dimensions
-const ASPECT_RATIO: f32 = 16.0 / 9.0;
-const IMG_WIDTH: usize = 256;
+const ASPECT_RATIO: f32 = 3.0 / 2.0;
+const IMG_WIDTH: usize = 1200;
 const IMG_HEIGHT: usize = (IMG_WIDTH as f32 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: i32 = 100;
+const SAMPLES_PER_PIXEL: i32 = 50;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
@@ -45,25 +45,71 @@ fn ray_color(r: Ray, world: &HittableList<Sphere>, depth: i32) -> Color {
     }
 }
 
-fn main() -> io::Result<()> {
-    let mut stdout = io::stdout();
+fn random_scene() -> HittableList<Sphere> {
+    let mut world = HittableList::new();
+    let ground_material = Surface::Lambertian(Vec3::new(0.5, 0.5, 0.5));
+    let material1 = Surface::Dielectric(1.5);
+    let material2 = Surface::Lambertian(Vec3::new(0.4, 0.2, 0.1));
+    let material3 = Surface::Metal(Vec3::new(0.7, 0.6, 0.5), 0.0);
 
-    stdout.write_all(format!("P3\n{} {}\n255\n", IMG_WIDTH, IMG_HEIGHT).as_bytes())?;
+    world.add(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, ground_material));
+
+    let mut rng = rand::thread_rng();
+    for a in -11..11 {
+        for b in -11..11 {
+            let a = a as f32;
+            let b = b as f32;
+
+            let choose_mat = random_double(&mut rng);
+            let center = Vec3::new(
+                a + 0.9 * random_double(&mut rng),
+                0.2,
+                b + 0.9 * random_double(&mut rng),
+            );
+
+            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = color::random() * color::random();
+                    let sphere_material = Surface::Lambertian(albedo);
+                    world.add(Sphere::new(center, 0.2, sphere_material));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = color::random_range(0.5, 1.0);
+                    let fuzz = random_double_range(&mut rng, 0.0, 0.5);
+                    let sphere_material = Surface::Metal(albedo, fuzz);
+                    world.add(Sphere::new(center, 0.2, sphere_material));
+                } else {
+                    // glass
+                    let sphere_material = Surface::Dielectric(1.5);
+                    world.add(Sphere::new(center, 0.2, sphere_material));
+                }
+            }
+        }
+    }
+
+    world.add(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, material1));
+    world.add(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, material2));
+    world.add(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, material3));
+
+    world
+}
+
+fn main() -> io::Result<()> {
+    let mut stream = BufWriter::new(io::stdout());
+
+    stream.write_all(format!("P3\n{} {}\n255\n", IMG_WIDTH, IMG_HEIGHT).as_bytes())?;
 
     // Camera
-    let camera = Camera::new();
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let camera = Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus);
 
     // World initialization
-    let mut world: HittableList<Sphere> = HittableList::new();
-    let material_ground = Surface::Lambertian(Vec3::new(0.8, 0.8, 0.0));
-    let material_center = Surface::Lambertian(Vec3::new(0.7, 0.3, 0.3));
-    let material_left = Surface::Metal(Vec3::new(0.8, 0.8, 0.8), 0.3);
-    let material_right = Surface::Metal(Vec3::new(0.8, 0.6, 0.2), 1.0);
-
-    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right));
+    let world = random_scene();
 
     for j in (0..IMG_HEIGHT).rev() {
         eprintln!("\rScanlines remaining: {}", j);
@@ -78,9 +124,11 @@ fn main() -> io::Result<()> {
                 let r = camera.ray_at(u, v);
                 pixel_color += ray_color(r, &world, MAX_DEPTH);
             }
-            write_color(&mut stdout, pixel_color, SAMPLES_PER_PIXEL)?;
+            write_color(&mut stream, pixel_color, SAMPLES_PER_PIXEL)?;
         }
     }
+
+    stream.flush().unwrap();
     eprintln!("\nDone!\n");
     Ok(())
 }

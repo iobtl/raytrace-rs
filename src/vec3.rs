@@ -123,3 +123,11 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     let b = v.dot(n);
     *v - (*n * b * 2.0)
 }
+
+pub fn refract(uv: &Vec3, n: &Vec3, eta_etaprime: f32) -> Vec3 {
+    let cos_theta = (-*uv).dot(n).min(1.0);
+
+    let r_out_h = (*uv + *n * cos_theta) * eta_etaprime;
+    let r_out_v = *n * -((1.0 - r_out_h.length_squared()).abs().sqrt());
+    r_out_h + r_out_v
+}

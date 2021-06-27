@@ -56,6 +56,17 @@ pub fn random_in_hemipshere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
     }
 }
 
+pub fn random_unit_disk(rng: &mut ThreadRng) -> Vec3 {
+    let p =
+        Vec3::new(random_double_range(rng, -1.0, 1.0), random_double_range(rng, -1.0, 1.0), 0.0);
+
+    if p.length_squared() >= 1.0 {
+        random_unit_disk(rng)
+    } else {
+        p
+    }
+}
+
 pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
     if x < min {
         min

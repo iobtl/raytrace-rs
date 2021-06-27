@@ -1,34 +1,52 @@
 use crate::{
     ray::Ray,
-    vec3::{Point3, Vec3},
-    ASPECT_RATIO,
+    utility::{degrees_to_radians, random_unit_disk},
+    vec3::{unit_vector, Point3, Vec3},
 };
-
-// Camera
-const VIEWPORT_HEIGHT: f32 = 2.0;
-const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-const FOCAL_LENGTH: f32 = 1.0;
 
 pub struct Camera {
     origin: Point3,
     lower_left: Point3,
     horizontal: Vec3,
     vertical: Vec3,
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
+    lens_radius: f32,
 }
 
 impl Camera {
-    pub fn new() -> Self {
-        let origin = Vec3::new(0.0, 0.0, 0.0);
-        let horizontal = Vec3::new(VIEWPORT_WIDTH, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, VIEWPORT_HEIGHT, 0.0);
-        let lower_left =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, FOCAL_LENGTH);
+    pub fn new(
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vec3,
+        vfov: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_dist: f32,
+    ) -> Self {
+        let theta = degrees_to_radians(vfov);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h;
+        let viewport_width = aspect_ratio * viewport_height;
 
-        Camera { origin, lower_left, horizontal, vertical }
+        let w = unit_vector(&(lookfrom - lookat));
+        let u = unit_vector(&vup.cross(&w));
+        let v = w.cross(&u);
+
+        let origin = lookfrom;
+        let horizontal = u * viewport_width * focus_dist;
+        let vertical = v * viewport_height * focus_dist;
+        let lower_left = origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
+        let lens_radius = aperture / 2.0;
+
+        Camera { origin, lower_left, horizontal, vertical, u, v, w, lens_radius }
     }
 
-    pub fn ray_at(&self, u: f32, v: f32) -> Ray {
-        let Camera { origin, lower_left, horizontal, vertical } = *self;
-        Ray::new(origin, lower_left + horizontal * u + vertical * v - origin)
+    pub fn ray_at(&self, s: f32, t: f32) -> Ray {
+        let Camera { origin, lower_left, horizontal, vertical, u, v, lens_radius, .. } = *self;
+        let rd = random_unit_disk(&mut rand::thread_rng()) * lens_radius;
+        let offset = u * rd.x() + v * rd.y();
+        Ray::new(origin + offset, lower_left + horizontal * s + vertical * t - origin - offset)
     }
 }

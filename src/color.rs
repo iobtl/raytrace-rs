@@ -1,6 +1,9 @@
 use std::io::{self, Write};
 
-use crate::{utility::clamp, vec3::Color};
+use crate::{
+    utility::{clamp, random_double, random_double_range},
+    vec3::{Color, Vec3},
+};
 
 pub fn write_color(
     out: &mut dyn Write,
@@ -28,4 +31,18 @@ pub fn write_color(
     out.write_all(b"\n")?;
 
     Ok(())
+}
+
+pub fn random() -> Color {
+    let mut rng = rand::thread_rng();
+    Vec3::new(random_double(&mut rng), random_double(&mut rng), random_double(&mut rng))
+}
+
+pub fn random_range(min: f32, max: f32) -> Color {
+    let mut rng = rand::thread_rng();
+    Vec3::new(
+        random_double_range(&mut rng, min, max),
+        random_double_range(&mut rng, min, max),
+        random_double_range(&mut rng, min, max),
+    )
 }
