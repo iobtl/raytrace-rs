@@ -1,9 +1,6 @@
-use indicatif::{ProgressBar, ProgressIterator};
+use indicatif::ProgressBar;
 use rayon::prelude::*;
-use std::{
-    fs::File,
-    io::{self, BufWriter, Write},
-};
+use std::io::{self, BufWriter, Write};
 
 pub mod camera;
 pub mod color;

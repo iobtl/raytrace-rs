@@ -1,5 +1,3 @@
-use std::io::{self, Write};
-
 use crate::{
     utility::{clamp, random_double, random_double_range},
     vec3::{Color, Vec3},
