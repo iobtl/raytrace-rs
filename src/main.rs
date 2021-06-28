@@ -26,9 +26,9 @@ use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
-const IMG_WIDTH: u32 = 400;
+const IMG_WIDTH: u32 = 1200;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 100;
+const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color {
