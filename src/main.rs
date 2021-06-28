@@ -1,6 +1,7 @@
 use indicatif::ProgressBar;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
+use texture::SurfaceTexture;
 
 pub mod aabb;
 pub mod bvh;
@@ -10,6 +11,7 @@ pub mod hittable;
 pub mod material;
 pub mod ray;
 pub mod sphere;
+pub mod texture;
 pub mod utility;
 pub mod vec3;
 
@@ -49,11 +51,14 @@ fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color 
     }
 }
 
-fn random_scene() -> HittableList<MovingSphere> {
+fn random_scene<'a>() -> HittableList<MovingSphere> {
     let mut world = HittableList::new();
-    let ground_material = Surface::Lambertian(Vec3::new(0.5, 0.5, 0.5));
+
+    let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
+    let ground_material = Surface::Lambertian(checkered);
+
     let material1 = Surface::Dielectric(1.5);
-    let material2 = Surface::Lambertian(Vec3::new(0.4, 0.2, 0.1));
+    let material2 = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.4, 0.2, 0.1)));
     let material3 = Surface::Metal(Vec3::new(0.7, 0.6, 0.5), 0.0);
 
     world.add(MovingSphere::new(
@@ -82,7 +87,7 @@ fn random_scene() -> HittableList<MovingSphere> {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = color::random() * color::random();
-                    let sphere_material = Surface::Lambertian(albedo);
+                    let sphere_material = Surface::Lambertian(SurfaceTexture::Solid(albedo));
                     let center2 =
                         center + Vec3::new(0.0, random_double_range(&mut rng, 0.0, 0.5), 0.0);
                     world.add(MovingSphere::new(center, center2, 0.0, 1.0, 0.2, sphere_material));

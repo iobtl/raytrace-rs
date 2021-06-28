@@ -52,6 +52,8 @@ impl BVHNode {
             objects.sort_by(comparator);
 
             let mid = start + object_span / 2;
+
+            // Post-order construction of BVH tree
             left = Rc::new(BVHNode::new(objects, start, mid, t0, t1));
             right = Rc::new(BVHNode::new(objects, mid, end, t0, t1));
         }

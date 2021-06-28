@@ -3,6 +3,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     material::Surface,
     ray::Ray,
+    utility::PI,
     vec3::{Point3, Vec3},
 };
 
@@ -43,14 +44,15 @@ impl Hittable for Sphere {
             } else {
                 let p = r.at(root);
                 let t = root;
+                let (u, v) = sphere_uv(&p);
                 let normal = (p - self.center) / self.radius;
                 let front_face = HitRecord::face_normal(r, &normal);
 
                 // Surface normal is always against the incident ray
                 if front_face {
-                    Some(HitRecord::new(p, normal, t, front_face, &self.material))
+                    Some(HitRecord::new(p, normal, t, u, v, front_face, &self.material))
                 } else {
-                    Some(HitRecord::new(p, -normal, t, front_face, &self.material))
+                    Some(HitRecord::new(p, -normal, t, u, v, front_face, &self.material))
                 }
             }
         }
@@ -117,14 +119,15 @@ impl Hittable for MovingSphere {
             } else {
                 let p = r.at(root);
                 let t = root;
+                let (u, v) = sphere_uv(&p);
                 let normal = (p - self.center(r.time())) / self.radius;
                 let front_face = HitRecord::face_normal(r, &normal);
 
                 // Surface normal is always against the incident ray
                 if front_face {
-                    Some(HitRecord::new(p, normal, t, front_face, &self.material))
+                    Some(HitRecord::new(p, normal, t, u, v, front_face, &self.material))
                 } else {
-                    Some(HitRecord::new(p, -normal, t, front_face, &self.material))
+                    Some(HitRecord::new(p, -normal, t, u, v, front_face, &self.material))
                 }
             }
         }
@@ -144,4 +147,12 @@ impl Hittable for MovingSphere {
 
         Some(aabb::surrounding_box(box0, box1))
     }
+}
+
+// Returns spherical coordinates mapped to (u, v) in interval [0, 1]
+fn sphere_uv(p: &Point3) -> (f32, f32) {
+    let theta = (-p.y()).acos();
+    let phi = (-p.z()).atan2(p.x()) + PI;
+
+    (phi / (2.0 * PI), theta / PI)
 }

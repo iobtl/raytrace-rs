@@ -1,3 +1,5 @@
+use crate::texture::SurfaceTexture;
+use crate::texture::Texture;
 use crate::utility::*;
 use crate::vec3::{reflect, refract, unit_vector, Vec3};
 use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
@@ -11,7 +13,7 @@ pub trait Material {
 
 #[derive(Copy, Clone)]
 pub enum Surface {
-    Lambertian(Color),
+    Lambertian(SurfaceTexture),
     Metal(Color, f32),
     Dielectric(f32),
 }
@@ -28,7 +30,7 @@ impl Material for Surface {
                 }
 
                 let scattered = Ray::new(rec.p, scatter_direction, ray.time());
-                let attenuation = *albedo;
+                let attenuation = albedo.value(rec.u, rec.v, &rec.p);
 
                 Some((scattered, attenuation))
             }
