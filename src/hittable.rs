@@ -1,4 +1,5 @@
 use crate::{
+    aabb::{surrounding_box, AABB},
     material::Surface,
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -26,6 +27,7 @@ impl<'a> HitRecord<'a> {
 
 pub trait Hittable {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
 }
 
 // Using generics implementation since only dealing with spheres for now
@@ -61,5 +63,29 @@ where
         }
 
         temp_rec
+    }
+
+    pub fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        if self.objects.is_empty() {
+            None
+        } else {
+            let mut temp_box: Option<AABB> = None;
+
+            for object in self.objects.iter() {
+                match object.bounding_box(t0, t1) {
+                    Some(bbox) => {
+                        temp_box = if temp_box.is_none() {
+                            Some(bbox)
+                        } else {
+                            Some(surrounding_box(bbox, temp_box.unwrap()))
+                        };
+                    }
+                    // Every object should have a bounding box
+                    None => break,
+                }
+            }
+
+            temp_box
+        }
     }
 }

@@ -107,6 +107,14 @@ impl Div<f32> for Vec3 {
     }
 }
 
+impl Div<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn div(self, other: Vec3) -> Self::Output {
+        Self(self.0 / other.0, self.1 / other.1, self.2 / other.2)
+    }
+}
+
 impl Neg for Vec3 {
     type Output = Self;
 
@@ -130,4 +138,8 @@ pub fn refract(uv: &Vec3, n: &Vec3, eta_etaprime: f32) -> Vec3 {
     let r_out_h = (*uv + *n * cos_theta) * eta_etaprime;
     let r_out_v = *n * -((1.0 - r_out_h.length_squared()).abs().sqrt());
     r_out_h + r_out_v
+}
+
+pub fn unpack(v: &Vec3) -> [f32; 3] {
+    [v.x(), v.y(), v.z()]
 }

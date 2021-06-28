@@ -31,6 +31,14 @@ pub fn random_double_range(rng: &mut ThreadRng, min: f32, max: f32) -> f32 {
     min + (max - min) * random_double(rng)
 }
 
+pub fn random_int(rng: &mut ThreadRng) -> i32 {
+    (*rng).gen::<i32>()
+}
+
+pub fn random_int_range(rng: &mut ThreadRng, min: i32, max: i32) -> i32 {
+    min + (max - min) * random_int(rng)
+}
+
 // Reject points picked from unit cube until falls inside a unit sphere
 pub fn random_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     let p = random_vec_range(rng, -1.0, 1.0);

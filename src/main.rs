@@ -2,6 +2,8 @@ use indicatif::ProgressBar;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
 
+pub mod aabb;
+pub mod bvh;
 pub mod camera;
 pub mod color;
 pub mod hittable;

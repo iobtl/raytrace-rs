@@ -1,8 +1,9 @@
 use crate::{
+    aabb::{self, AABB},
     hittable::{HitRecord, Hittable},
     material::Surface,
     ray::Ray,
-    vec3::Point3,
+    vec3::{Point3, Vec3},
 };
 
 pub struct Sphere {
@@ -53,6 +54,15 @@ impl Hittable for Sphere {
                 }
             }
         }
+    }
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        let radius = self.radius;
+        let aabb = AABB::new(
+            self.center - Vec3::new(radius, radius, radius),
+            self.center + Vec3::new(radius, radius, radius),
+        );
+
+        Some(aabb)
     }
 }
 
@@ -118,5 +128,20 @@ impl Hittable for MovingSphere {
                 }
             }
         }
+    }
+
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        let radius = self.radius;
+        let box0 = AABB::new(
+            self.center(t0) - Vec3::new(radius, radius, radius),
+            self.center(t0) + Vec3::new(radius, radius, radius),
+        );
+
+        let box1 = AABB::new(
+            self.center(t1) - Vec3::new(radius, radius, radius),
+            self.center(t1) + Vec3::new(radius, radius, radius),
+        );
+
+        Some(aabb::surrounding_box(box0, box1))
     }
 }
