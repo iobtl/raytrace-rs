@@ -27,7 +27,7 @@ use utility::*;
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMG_WIDTH: u32 = 1200;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 1000;
+const SAMPLES_PER_PIXEL: i32 = 4000;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color {
@@ -65,7 +65,7 @@ fn main() -> io::Result<()> {
         Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // World initialization
-    let world = scenes::two_spheres();
+    let world = scenes::random_scene();
     let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
 
     let t0 = std::time::Instant::now();

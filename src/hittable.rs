@@ -83,12 +83,11 @@ where
 
             for object in self.objects.iter() {
                 match object.bounding_box(t0, t1) {
+                    Some(bbox) if temp_box.is_none() => {
+                        temp_box = Some(bbox);
+                    }
                     Some(bbox) => {
-                        temp_box = if temp_box.is_none() {
-                            Some(bbox)
-                        } else {
-                            Some(surrounding_box(bbox, temp_box.unwrap()))
-                        };
+                        temp_box = Some(surrounding_box(bbox, temp_box.unwrap()));
                     }
                     // Every object should have a bounding box
                     None => break,
