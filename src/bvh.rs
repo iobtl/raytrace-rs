@@ -5,7 +5,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     ray::Ray,
     utility::random_int_range,
-    vec3::{self, Vec3},
+    vec3,
 };
 
 // Abstract tree structure to represent bounding volumes hierarchy
@@ -16,7 +16,6 @@ pub struct BVHNode {
 }
 
 impl BVHNode {
-    // TODO: reference for objects? copy expensive
     pub fn new(
         objects: &mut Vec<Rc<dyn Hittable>>,
         start: usize,
