@@ -7,6 +7,7 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
+#[derive(Copy, Clone)]
 pub struct Sphere<'a> {
     center: Point3,
     radius: f32,
@@ -68,6 +69,7 @@ impl Hittable for Sphere<'_> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct MovingSphere<'a> {
     center0: Point3,
     center1: Point3,

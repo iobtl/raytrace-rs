@@ -1,5 +1,6 @@
 use crate::{
     aabb::{surrounding_box, AABB},
+    instances::{RotateY, Translate},
     material::Surface,
     ray::Ray,
     rect::{Box, XYRect, XZRect, YZRect},
@@ -48,6 +49,8 @@ pub enum HitModel<'a> {
     XZRect(XZRect<'a>),
     YZRect(YZRect<'a>),
     Box(Box<'a>),
+    Translate(Translate<'a>),
+    RotateY(RotateY<'a>),
 }
 
 impl Hittable for HitModel<'_> {
@@ -59,6 +62,8 @@ impl Hittable for HitModel<'_> {
             Self::XZRect(rect) => rect.hit(r, tmin, tmax),
             Self::YZRect(rect) => rect.hit(r, tmin, tmax),
             Self::Box(_box) => _box.hit(r, tmin, tmax),
+            Self::Translate(translate) => translate.hit(r, tmin, tmax),
+            Self::RotateY(rotate) => rotate.hit(r, tmin, tmax),
         }
     }
 
@@ -70,6 +75,8 @@ impl Hittable for HitModel<'_> {
             Self::XZRect(rect) => rect.bounding_box(t0, t1),
             Self::YZRect(rect) => rect.bounding_box(t0, t1),
             Self::Box(_box) => _box.bounding_box(t0, t1),
+            Self::Translate(translate) => translate.bounding_box(t0, t1),
+            Self::RotateY(rotate) => rotate.bounding_box(t0, t1),
         }
     }
 }

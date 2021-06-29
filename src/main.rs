@@ -7,6 +7,7 @@ pub mod bvh;
 pub mod camera;
 pub mod color;
 pub mod hittable;
+pub mod instances;
 pub mod material;
 pub mod perlin;
 pub mod ray;

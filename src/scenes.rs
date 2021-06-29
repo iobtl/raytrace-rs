@@ -2,6 +2,7 @@ use image::{ImageBuffer, Rgb};
 
 use crate::camera::Camera;
 use crate::hittable::HitModel;
+use crate::instances::{RotateY, Translate};
 use crate::perlin::Perlin;
 use crate::rect::{Box, XYRect, XZRect, YZRect};
 use crate::sphere::Sphere;
@@ -226,17 +227,17 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(HitModel::XYRect(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
-    objects.add(HitModel::Box(Box::new(
-        Vec3::new(130.0, 0.0, 65.0),
-        Vec3::new(295.0, 165.0, 230.0),
-        white,
-    )));
+    let box1 =
+        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 330.0, 165.0), white));
+    let box1 = HitModel::RotateY(RotateY::new(box1, 15.0));
+    let box1 = HitModel::Translate(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    objects.add(box1);
 
-    objects.add(HitModel::Box(Box::new(
-        Vec3::new(265.0, 0.0, 295.0),
-        Vec3::new(430.0, 330.0, 460.0),
-        white,
-    )));
+    let box2 =
+        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 165.0, 165.0), white));
+    let box2 = HitModel::RotateY(RotateY::new(box2, -18.0));
+    let box2 = HitModel::Translate(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    objects.add(box2);
 
     (objects, camera, background)
 }
