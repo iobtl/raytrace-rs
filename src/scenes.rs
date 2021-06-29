@@ -1,3 +1,4 @@
+use crate::perlin::Perlin;
 use crate::sphere::Sphere;
 use crate::{color, utility::*};
 use crate::{
@@ -94,6 +95,15 @@ pub fn two_spheres() -> HittableList<Sphere> {
 
     objects.add(Sphere::new(Vec3::new(0.0, -10.0, 0.0), 10.0, Surface::Lambertian(checkered)));
     objects.add(Sphere::new(Vec3::new(0.0, 10.0, 0.0), 10.0, Surface::Lambertian(checkered)));
+
+    objects
+}
+
+pub fn two_perlin_spheres() -> HittableList<Sphere> {
+    let mut objects = HittableList::new();
+    let perlin = SurfaceTexture::Noise(Perlin::new(), 4.0);
+    objects.add(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, Surface::Lambertian(perlin)));
+    objects.add(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, Surface::Lambertian(perlin)));
 
     objects
 }

@@ -63,6 +63,14 @@ impl Add<Vec3> for Vec3 {
     }
 }
 
+impl Add<f32> for Vec3 {
+    type Output = Self;
+
+    fn add(self, other: f32) -> Self::Output {
+        Self(self.0 + other, self.1 + other, self.2 + other)
+    }
+}
+
 impl Sub<Vec3> for Vec3 {
     type Output = Self;
 

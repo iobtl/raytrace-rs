@@ -11,7 +11,7 @@ pub trait Material {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color)>;
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum Surface {
     Lambertian(SurfaceTexture),
     Metal(Color, f32),

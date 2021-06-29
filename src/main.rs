@@ -8,6 +8,7 @@ pub mod camera;
 pub mod color;
 pub mod hittable;
 pub mod material;
+pub mod perlin;
 pub mod ray;
 pub mod scenes;
 pub mod sphere;
@@ -27,7 +28,7 @@ use utility::*;
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMG_WIDTH: u32 = 1200;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 4000;
+const SAMPLES_PER_PIXEL: i32 = 50;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color {
@@ -59,13 +60,13 @@ fn main() -> io::Result<()> {
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
+    let dist_to_focus = 12.0;
     let aperture = 0.1;
     let camera =
         Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // World initialization
-    let world = scenes::random_scene();
+    let world = scenes::two_perlin_spheres();
     let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
 
     let t0 = std::time::Instant::now();

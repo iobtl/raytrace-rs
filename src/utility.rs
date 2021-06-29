@@ -36,7 +36,7 @@ pub fn random_int(rng: &mut ThreadRng) -> i32 {
 }
 
 pub fn random_int_range(rng: &mut ThreadRng, min: i32, max: i32) -> i32 {
-    min + (max - min) * random_int(rng)
+    (*rng).gen_range(min..=max)
 }
 
 // Reject points picked from unit cube until falls inside a unit sphere

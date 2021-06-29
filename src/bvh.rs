@@ -49,7 +49,7 @@ impl BVHNode {
                 right = first;
             }
         } else {
-            objects.sort_by(comparator);
+            &mut objects[start..=end].sort_by(comparator);
 
             let mid = start + object_span / 2;
 

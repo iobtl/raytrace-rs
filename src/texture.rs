@@ -1,4 +1,7 @@
-use crate::vec3::{Color, Point3};
+use crate::{
+    perlin::Perlin,
+    vec3::{Color, Point3, Vec3},
+};
 
 pub trait Texture {
     fn value(&self, u: f32, v: f32, p: &Point3) -> Color;
@@ -8,6 +11,7 @@ pub trait Texture {
 pub enum SurfaceTexture {
     Solid(Color),
     Checkered(Color, Color), // only raw colors to make implementation simpler
+    Noise(Perlin, f32),
 }
 
 impl Texture for SurfaceTexture {
@@ -22,6 +26,10 @@ impl Texture for SurfaceTexture {
                 } else {
                     *even
                 }
+            }
+            Self::Noise(noise, scale) => {
+                let gen_noise = *p * *scale + 1.0;
+                Vec3::new(1.0, 1.0, 1.0) * 0.5 * noise.noise(&gen_noise)
             }
         }
     }
