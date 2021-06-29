@@ -26,8 +26,8 @@ use crate::color::process_color;
 use utility::*;
 
 // Image dimensions
-const ASPECT_RATIO: f32 = 16.0 / 9.0;
-const IMG_WIDTH: u32 = 1200;
+const ASPECT_RATIO: f32 = 1.0;
+const IMG_WIDTH: u32 = 600;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
 const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
@@ -62,7 +62,7 @@ fn main() -> io::Result<()> {
 
     // World initialization
     // let earth_image = open("earth.jpg").unwrap().into_rgb8();
-    let (world, camera, background) = scenes::simple_light();
+    let (world, camera, background) = scenes::cornell_box();
 
     let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
     let t0 = std::time::Instant::now();

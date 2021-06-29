@@ -2,7 +2,7 @@ use crate::{
     aabb::{surrounding_box, AABB},
     material::Surface,
     ray::Ray,
-    rect::XYRect,
+    rect::{Box, XYRect, XZRect, YZRect},
     sphere::{MovingSphere, Sphere},
     vec3::{Point3, Vec3},
 };
@@ -45,6 +45,9 @@ pub enum HitModel<'a> {
     Sphere(Sphere<'a>),
     MovingSphere(MovingSphere<'a>),
     XYRect(XYRect<'a>),
+    XZRect(XZRect<'a>),
+    YZRect(YZRect<'a>),
+    Box(Box<'a>),
 }
 
 impl Hittable for HitModel<'_> {
@@ -53,6 +56,9 @@ impl Hittable for HitModel<'_> {
             Self::Sphere(sphere) => sphere.hit(r, tmin, tmax),
             Self::MovingSphere(sphere) => sphere.hit(r, tmin, tmax),
             Self::XYRect(rect) => rect.hit(r, tmin, tmax),
+            Self::XZRect(rect) => rect.hit(r, tmin, tmax),
+            Self::YZRect(rect) => rect.hit(r, tmin, tmax),
+            Self::Box(_box) => _box.hit(r, tmin, tmax),
         }
     }
 
@@ -61,6 +67,9 @@ impl Hittable for HitModel<'_> {
             Self::Sphere(sphere) => sphere.bounding_box(t0, t1),
             Self::MovingSphere(sphere) => sphere.bounding_box(t0, t1),
             Self::XYRect(rect) => rect.bounding_box(t0, t1),
+            Self::XZRect(rect) => rect.bounding_box(t0, t1),
+            Self::YZRect(rect) => rect.bounding_box(t0, t1),
+            Self::Box(_box) => _box.bounding_box(t0, t1),
         }
     }
 }

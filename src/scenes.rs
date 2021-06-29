@@ -3,7 +3,7 @@ use image::{ImageBuffer, Rgb};
 use crate::camera::Camera;
 use crate::hittable::HitModel;
 use crate::perlin::Perlin;
-use crate::rect::XYRect;
+use crate::rect::{Box, XYRect, XZRect, YZRect};
 use crate::sphere::Sphere;
 use crate::vec3::Color;
 use crate::{color, utility::*, ASPECT_RATIO};
@@ -177,7 +177,7 @@ pub fn simple_light<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let lookfrom = Vec3::new(26.0, 3.0, 6.0);
     let lookat = Vec3::new(0.0, 2.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).length();
+    let dist_to_focus = 10.0;
     let aperture = 0.1;
     let vfov = 20.0;
     let background = Vec3::new(0.0, 0.0, 0.0);
@@ -194,8 +194,49 @@ pub fn simple_light<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     )));
     objects.add(HitModel::Sphere(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, perlin_surface)));
 
+    // Values greater than Vec3(1.0, 1.0, 1.0) allow for emission of light
     let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(4.0, 4.0, 4.0)));
     objects.add(HitModel::XYRect(XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, light)));
+
+    (objects, camera, background)
+}
+
+pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
+    let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 40.0;
+    let background = Vec3::new(0.0, 0.0, 0.0);
+
+    let camera = Camera::new(lookfrom, lookat, vup, vfov, 1.0, aperture, dist_to_focus, 0.0, 0.0);
+
+    let red = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.65, 0.05, 0.05)));
+    let white = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.73, 0.73, 0.73)));
+    let green = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.12, 0.45, 0.15)));
+    let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(15.0, 15.0, 15.0)));
+
+    objects.add(HitModel::YZRect(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    objects.add(HitModel::YZRect(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    objects.add(HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light)));
+    objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
+    objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects.add(HitModel::XYRect(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+
+    objects.add(HitModel::Box(Box::new(
+        Vec3::new(130.0, 0.0, 65.0),
+        Vec3::new(295.0, 165.0, 230.0),
+        white,
+    )));
+
+    objects.add(HitModel::Box(Box::new(
+        Vec3::new(265.0, 0.0, 295.0),
+        Vec3::new(430.0, 330.0, 460.0),
+        white,
+    )));
 
     (objects, camera, background)
 }
