@@ -1,4 +1,3 @@
-use image::open;
 use indicatif::ProgressBar;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
@@ -11,6 +10,7 @@ pub mod hittable;
 pub mod material;
 pub mod perlin;
 pub mod ray;
+pub mod rect;
 pub mod scenes;
 pub mod sphere;
 pub mod texture;
@@ -22,32 +22,35 @@ use material::Material;
 use ray::Ray;
 use vec3::{Color, Vec3};
 
-use crate::{camera::Camera, color::process_color, scenes::earth};
+use crate::color::process_color;
 use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMG_WIDTH: u32 = 1200;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 50;
+const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
 
-fn ray_color<T: Hittable>(r: Ray, world: &HittableList<T>, depth: i32) -> Color {
+fn ray_color<T: Hittable>(
+    r: Ray,
+    background: &Color,
+    world: &HittableList<T>,
+    depth: i32,
+) -> Color {
     // Limit number of ray bounces
     if depth <= 0 {
         Vec3::new(0.0, 0.0, 0.0)
     } else {
         if let Some(hit_rec) = world.hit(&r, 0.001, INFINITY) {
+            let emitted = hit_rec.material.emit(hit_rec.u, hit_rec.v, &hit_rec.p);
             if let Some((scattered, attenuation)) = hit_rec.material.scatter(&r, &hit_rec) {
-                attenuation * ray_color(scattered, world, depth - 1)
+                emitted + attenuation * ray_color(scattered, background, world, depth - 1)
             } else {
-                Vec3::new(0.0, 0.0, 0.0)
+                emitted
             }
         } else {
-            // Using `y` height _after_ normalizing gives a horizontal gradient
-            let unit_direction = vec3::unit_vector(&r.direction());
-            let t = (unit_direction.y() + 1.0) * 0.5;
-            Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+            *background
         }
     }
 }
@@ -57,20 +60,11 @@ fn main() -> io::Result<()> {
 
     stream.write_all(format!("P3\n{} {}\n255\n", IMG_WIDTH, IMG_HEIGHT).as_bytes())?;
 
-    // Camera
-    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
-    let lookat = Vec3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 12.0;
-    let aperture = 0.1;
-    let camera =
-        Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
-
     // World initialization
-    let earth_image = open("earth.jpg").unwrap().into_rgb8();
-    let world = scenes::earth(&earth_image);
-    let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
+    // let earth_image = open("earth.jpg").unwrap().into_rgb8();
+    let (world, camera, background) = scenes::simple_light();
 
+    let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
     let t0 = std::time::Instant::now();
     let pb = ProgressBar::new(IMG_HEIGHT.into());
     eprintln!("Tracing rays\n");
@@ -89,7 +83,7 @@ fn main() -> io::Result<()> {
                         let u = ((i as f32) + random_double(&mut rng)) / ((IMG_WIDTH - 1) as f32);
                         let v = ((j as f32) + random_double(&mut rng)) / ((IMG_HEIGHT - 1) as f32);
                         let r = camera.ray_at(u, v);
-                        pixel_color += ray_color(r, &world, MAX_DEPTH);
+                        pixel_color += ray_color(r, &background, &world, MAX_DEPTH);
                     }
                     process_color(pixel_color, SAMPLES_PER_PIXEL)
                 })

@@ -1,15 +1,30 @@
 use image::{ImageBuffer, Rgb};
 
+use crate::camera::Camera;
+use crate::hittable::HitModel;
 use crate::perlin::Perlin;
+use crate::rect::XYRect;
 use crate::sphere::Sphere;
-use crate::{color, utility::*};
+use crate::vec3::Color;
+use crate::{color, utility::*, ASPECT_RATIO};
 use crate::{
     hittable::HittableList, material::Surface, sphere::MovingSphere, texture::SurfaceTexture,
     vec3::Vec3,
 };
 
-pub fn random_scene<'a>() -> HittableList<MovingSphere<'a>> {
+pub fn random_scene<'a>() -> (HittableList<MovingSphere<'a>>, Camera, Color) {
     let mut world = HittableList::new();
+
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.7, 0.8, 1.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
     let ground_material = Surface::Lambertian(checkered);
@@ -88,34 +103,99 @@ pub fn random_scene<'a>() -> HittableList<MovingSphere<'a>> {
         material3,
     ));
 
-    world
+    (world, camera, background)
 }
 
-pub fn two_spheres<'a>() -> HittableList<Sphere<'a>> {
+pub fn two_spheres<'a>() -> (HittableList<Sphere<'a>>, Camera, Color) {
     let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.7, 0.8, 1.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 0.0);
     let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
 
     objects.add(Sphere::new(Vec3::new(0.0, -10.0, 0.0), 10.0, Surface::Lambertian(checkered)));
     objects.add(Sphere::new(Vec3::new(0.0, 10.0, 0.0), 10.0, Surface::Lambertian(checkered)));
 
-    objects
+    (objects, camera, background)
 }
 
-pub fn two_perlin_spheres<'a>() -> HittableList<Sphere<'a>> {
+pub fn two_perlin_spheres<'a>() -> (HittableList<Sphere<'a>>, Camera, Color) {
     let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.7, 0.8, 1.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 0.0);
+
     let perlin = SurfaceTexture::Noise(Perlin::new(), 4.0);
     objects.add(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, Surface::Lambertian(perlin)));
     objects.add(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, Surface::Lambertian(perlin)));
 
-    objects
+    (objects, camera, background)
 }
 
-pub fn earth<'a>(buffer: &'a ImageBuffer<Rgb<u8>, Vec<u8>>) -> HittableList<Sphere<'a>> {
+pub fn earth<'a>(
+    buffer: &'a ImageBuffer<Rgb<u8>, Vec<u8>>,
+) -> (HittableList<Sphere<'a>>, Camera, Color) {
     let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.7, 0.8, 1.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 0.0);
     let earth = SurfaceTexture::Image { buffer, width: buffer.width(), height: buffer.height() };
     let earth_surface = Surface::Lambertian(earth);
 
     objects.add(Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, earth_surface));
 
-    objects
+    (objects, camera, background)
+}
+
+pub fn simple_light<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
+    let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(26.0, 3.0, 6.0);
+    let lookat = Vec3::new(0.0, 2.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = (lookfrom - lookat).length();
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.0, 0.0, 0.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 0.0);
+
+    let perlin = SurfaceTexture::Noise(Perlin::new(), 4.0);
+    let perlin_surface = Surface::Lambertian(perlin);
+    objects.add(HitModel::Sphere(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        perlin_surface,
+    )));
+    objects.add(HitModel::Sphere(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, perlin_surface)));
+
+    let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(4.0, 4.0, 4.0)));
+    objects.add(HitModel::XYRect(XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, light)));
+
+    (objects, camera, background)
 }

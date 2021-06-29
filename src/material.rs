@@ -1,6 +1,7 @@
 use crate::texture::SurfaceTexture;
 use crate::texture::Texture;
 use crate::utility::*;
+use crate::vec3::Point3;
 use crate::vec3::{reflect, refract, unit_vector, Vec3};
 use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
 
@@ -9,13 +10,15 @@ use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
 // 2. If scattered, determine how much the ray should be attenuated
 pub trait Material {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color)>;
+    fn emit(&self, u: f32, v: f32, p: &Point3) -> Color;
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Surface<'a> {
     Lambertian(SurfaceTexture<'a>),
     Metal(Color, f32),
     Dielectric(f32),
+    DiffuseLight(SurfaceTexture<'a>),
 }
 
 impl<'a> Material for Surface<'a> {
@@ -69,6 +72,13 @@ impl<'a> Material for Surface<'a> {
 
                 Some((scattered, attenuation))
             }
+            _ => None,
+        }
+    }
+    fn emit(&self, u: f32, v: f32, p: &Point3) -> Color {
+        match self {
+            Self::DiffuseLight(texture) => texture.value(u, v, p),
+            _ => Vec3::new(0.0, 0.0, 0.0),
         }
     }
 }

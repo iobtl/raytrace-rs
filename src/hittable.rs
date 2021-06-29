@@ -2,6 +2,8 @@ use crate::{
     aabb::{surrounding_box, AABB},
     material::Surface,
     ray::Ray,
+    rect::XYRect,
+    sphere::{MovingSphere, Sphere},
     vec3::{Point3, Vec3},
 };
 
@@ -38,6 +40,29 @@ impl<'a> HitRecord<'a> {
 pub trait Hittable {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
+}
+pub enum HitModel<'a> {
+    Sphere(Sphere<'a>),
+    MovingSphere(MovingSphere<'a>),
+    XYRect(XYRect<'a>),
+}
+
+impl Hittable for HitModel<'_> {
+    fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
+        match self {
+            Self::Sphere(sphere) => sphere.hit(r, tmin, tmax),
+            Self::MovingSphere(sphere) => sphere.hit(r, tmin, tmax),
+            Self::XYRect(rect) => rect.hit(r, tmin, tmax),
+        }
+    }
+
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        match self {
+            Self::Sphere(sphere) => sphere.bounding_box(t0, t1),
+            Self::MovingSphere(sphere) => sphere.bounding_box(t0, t1),
+            Self::XYRect(rect) => rect.bounding_box(t0, t1),
+        }
+    }
 }
 
 // Using generics implementation since only dealing with spheres for now
