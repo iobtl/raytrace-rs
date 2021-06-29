@@ -12,21 +12,22 @@ pub trait Material {
 }
 
 #[derive(Clone)]
-pub enum Surface {
-    Lambertian(SurfaceTexture),
+pub enum Surface<'a> {
+    Lambertian(SurfaceTexture<'a>),
     Metal(Color, f32),
     Dielectric(f32),
 }
 
-impl Material for Surface {
+impl<'a> Material for Surface<'a> {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
         match self {
             Self::Lambertian(albedo) => {
-                let scatter_direction = rec.normal + random_unit_vector(&mut rand::thread_rng());
+                let mut scatter_direction =
+                    rec.normal + random_unit_vector(&mut rand::thread_rng());
 
                 // Catch degenerate scatter direction (almost exactly opposite to normal)
                 if scatter_direction.near_zero() {
-                    let scatter_direction = rec.normal;
+                    scatter_direction = rec.normal;
                 }
 
                 let scattered = Ray::new(rec.p, scatter_direction, ray.time());

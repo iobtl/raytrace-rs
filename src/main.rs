@@ -1,3 +1,4 @@
+use image::open;
 use indicatif::ProgressBar;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
@@ -21,7 +22,7 @@ use material::Material;
 use ray::Ray;
 use vec3::{Color, Vec3};
 
-use crate::{camera::Camera, color::process_color};
+use crate::{camera::Camera, color::process_color, scenes::earth};
 use utility::*;
 
 // Image dimensions
@@ -66,7 +67,8 @@ fn main() -> io::Result<()> {
         Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // World initialization
-    let world = scenes::two_perlin_spheres();
+    let earth_image = open("earth.jpg").unwrap().into_rgb8();
+    let world = scenes::earth(&earth_image);
     let height_range = (0..IMG_HEIGHT).rev().collect::<Vec<u32>>();
 
     let t0 = std::time::Instant::now();

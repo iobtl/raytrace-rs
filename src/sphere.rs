@@ -7,19 +7,19 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Point3,
     radius: f32,
-    material: Surface,
+    material: Surface<'a>,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f32, material: Surface) -> Self {
+impl<'a> Sphere<'a> {
+    pub fn new(center: Point3, radius: f32, material: Surface<'a>) -> Self {
         Sphere { center, radius, material }
     }
 }
 
-impl Hittable for Sphere {
+impl Hittable for Sphere<'_> {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
         let oc = *r.origin() - self.center;
         let a = r.direction().length_squared();
@@ -68,23 +68,23 @@ impl Hittable for Sphere {
     }
 }
 
-pub struct MovingSphere {
+pub struct MovingSphere<'a> {
     center0: Point3,
     center1: Point3,
     t0: f32,
     t1: f32,
     radius: f32,
-    material: Surface,
+    material: Surface<'a>,
 }
 
-impl MovingSphere {
+impl<'a> MovingSphere<'a> {
     pub fn new(
         center0: Point3,
         center1: Point3,
         t0: f32,
         t1: f32,
         radius: f32,
-        material: Surface,
+        material: Surface<'a>,
     ) -> Self {
         MovingSphere { center0, center1, t0, t1, radius, material }
     }
@@ -94,7 +94,7 @@ impl MovingSphere {
     }
 }
 
-impl Hittable for MovingSphere {
+impl Hittable for MovingSphere<'_> {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
         let oc = *r.origin() - self.center(r.time());
         let a = r.direction().length_squared();

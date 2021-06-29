@@ -1,3 +1,5 @@
+use image::{ImageBuffer, Rgb};
+
 use crate::perlin::Perlin;
 use crate::sphere::Sphere;
 use crate::{color, utility::*};
@@ -6,7 +8,7 @@ use crate::{
     vec3::Vec3,
 };
 
-pub fn random_scene() -> HittableList<MovingSphere> {
+pub fn random_scene<'a>() -> HittableList<MovingSphere<'a>> {
     let mut world = HittableList::new();
 
     let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
@@ -89,7 +91,7 @@ pub fn random_scene() -> HittableList<MovingSphere> {
     world
 }
 
-pub fn two_spheres() -> HittableList<Sphere> {
+pub fn two_spheres<'a>() -> HittableList<Sphere<'a>> {
     let mut objects = HittableList::new();
     let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
 
@@ -99,11 +101,21 @@ pub fn two_spheres() -> HittableList<Sphere> {
     objects
 }
 
-pub fn two_perlin_spheres() -> HittableList<Sphere> {
+pub fn two_perlin_spheres<'a>() -> HittableList<Sphere<'a>> {
     let mut objects = HittableList::new();
     let perlin = SurfaceTexture::Noise(Perlin::new(), 4.0);
     objects.add(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, Surface::Lambertian(perlin)));
     objects.add(Sphere::new(Vec3::new(0.0, 2.0, 0.0), 2.0, Surface::Lambertian(perlin)));
+
+    objects
+}
+
+pub fn earth<'a>(buffer: &'a ImageBuffer<Rgb<u8>, Vec<u8>>) -> HittableList<Sphere<'a>> {
+    let mut objects = HittableList::new();
+    let earth = SurfaceTexture::Image { buffer, width: buffer.width(), height: buffer.height() };
+    let earth_surface = Surface::Lambertian(earth);
+
+    objects.add(Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, earth_surface));
 
     objects
 }

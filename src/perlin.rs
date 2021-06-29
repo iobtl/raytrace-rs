@@ -4,6 +4,7 @@ use crate::{
 };
 
 const POINT_COUNT: usize = 256;
+const NOISE_DEPTH: i32 = 7;
 
 #[derive(Copy, Clone)]
 pub struct Perlin {
@@ -28,7 +29,21 @@ impl Perlin {
         Perlin { ranvec, perm_x, perm_y, perm_z }
     }
 
-    pub fn noise(&self, p: &Point3) -> f32 {
+    pub fn turb(&self, p: &Point3) -> f32 {
+        let mut accum = 0.0;
+        let mut temp_p = *p;
+        let mut weight = 1.0;
+
+        for i in 0..NOISE_DEPTH {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+
+        accum.abs()
+    }
+
+    fn noise(&self, p: &Point3) -> f32 {
         // Random hashing to generate blocks of 'noise'
         let u = p.x() - p.x().floor();
         let v = p.y() - p.y().floor();
