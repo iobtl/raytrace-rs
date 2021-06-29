@@ -38,7 +38,7 @@ impl Perlin {
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
 
-        let mut c: [[[Vec3; 2]; 2]; 2] = [[[Vec3::new(1.0, 1.0, 1.0); 2]; 2]; 2];
+        let mut c: [[[Vec3; 2]; 2]; 2] = [[[Vec3::new(0.0, 0.0, 0.0); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {

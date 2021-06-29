@@ -28,8 +28,8 @@ impl Texture for SurfaceTexture {
                 }
             }
             Self::Noise(noise, scale) => {
-                let gen_noise = *p * *scale + 1.0;
-                Vec3::new(1.0, 1.0, 1.0) * 0.5 * noise.noise(&gen_noise)
+                let gen_noise = *p * *scale;
+                Vec3::new(1.0, 1.0, 1.0) * 0.5 * (noise.noise(&gen_noise) + 1.0)
             }
         }
     }
