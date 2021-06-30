@@ -1,11 +1,13 @@
 use crate::{
     aabb::{surrounding_box, AABB},
+    bvh::BVHNode,
     instances::{RotateY, Translate},
     material::Surface,
     ray::Ray,
     rect::{Box, XYRect, XZRect, YZRect},
     sphere::{MovingSphere, Sphere},
     vec3::{Point3, Vec3},
+    volumes::Constant,
 };
 
 pub struct HitRecord<'a> {
@@ -42,15 +44,19 @@ pub trait Hittable {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
 }
+// Wrapper class to avoid dealing with trait objects
+#[derive(Clone)]
 pub enum HitModel<'a> {
     Sphere(Sphere<'a>),
     MovingSphere(MovingSphere<'a>),
+    BVH(BVHNode<'a>),
     XYRect(XYRect<'a>),
     XZRect(XZRect<'a>),
     YZRect(YZRect<'a>),
     Box(Box<'a>),
     Translate(Translate<'a>),
     RotateY(RotateY<'a>),
+    Constant(Constant<'a>),
 }
 
 impl Hittable for HitModel<'_> {
@@ -58,12 +64,14 @@ impl Hittable for HitModel<'_> {
         match self {
             Self::Sphere(sphere) => sphere.hit(r, tmin, tmax),
             Self::MovingSphere(sphere) => sphere.hit(r, tmin, tmax),
+            Self::BVH(bvh) => bvh.hit(r, tmin, tmax),
             Self::XYRect(rect) => rect.hit(r, tmin, tmax),
             Self::XZRect(rect) => rect.hit(r, tmin, tmax),
             Self::YZRect(rect) => rect.hit(r, tmin, tmax),
             Self::Box(_box) => _box.hit(r, tmin, tmax),
             Self::Translate(translate) => translate.hit(r, tmin, tmax),
             Self::RotateY(rotate) => rotate.hit(r, tmin, tmax),
+            Self::Constant(volume) => volume.hit(r, tmin, tmax),
         }
     }
 
@@ -71,17 +79,20 @@ impl Hittable for HitModel<'_> {
         match self {
             Self::Sphere(sphere) => sphere.bounding_box(t0, t1),
             Self::MovingSphere(sphere) => sphere.bounding_box(t0, t1),
+            Self::BVH(bvh) => bvh.bounding_box(t0, t1),
             Self::XYRect(rect) => rect.bounding_box(t0, t1),
             Self::XZRect(rect) => rect.bounding_box(t0, t1),
             Self::YZRect(rect) => rect.bounding_box(t0, t1),
             Self::Box(_box) => _box.bounding_box(t0, t1),
             Self::Translate(translate) => translate.bounding_box(t0, t1),
             Self::RotateY(rotate) => rotate.bounding_box(t0, t1),
+            Self::Constant(volume) => volume.bounding_box(t0, t1),
         }
     }
 }
 
 // Using generics implementation since only dealing with spheres for now
+#[derive(Clone)]
 pub struct HittableList<T> {
     objects: Vec<T>,
 }
@@ -96,6 +107,10 @@ where
 
     pub fn add(&mut self, object: T) {
         Vec::push(&mut self.objects, object);
+    }
+
+    pub fn objects(&mut self) -> &mut Vec<T> {
+        &mut self.objects
     }
 
     pub fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {

@@ -1,23 +1,24 @@
-use std::{cmp::Ordering, rc::Rc};
+use std::cmp::Ordering;
 
 use crate::{
     aabb::{surrounding_box, AABB},
-    hittable::{HitRecord, Hittable},
+    hittable::{HitModel, HitRecord, Hittable},
     ray::Ray,
     utility::random_int_range,
     vec3,
 };
 
 // Abstract tree structure to represent bounding volumes hierarchy
-pub struct BVHNode {
-    left: Rc<dyn Hittable>,
-    right: Rc<dyn Hittable>,
+#[derive(Clone)]
+pub struct BVHNode<'a> {
+    left: Box<HitModel<'a>>,
+    right: Box<HitModel<'a>>,
     bbox: AABB,
 }
 
-impl BVHNode {
+impl<'a> BVHNode<'a> {
     pub fn new(
-        objects: &mut Vec<Rc<dyn Hittable>>,
+        objects: &mut Vec<HitModel<'a>>,
         start: usize,
         end: usize,
         t0: i32,
@@ -32,14 +33,14 @@ impl BVHNode {
         };
 
         let object_span = end - start;
-        let left: Rc<dyn Hittable>;
-        let right: Rc<dyn Hittable>;
+        let left: Box<HitModel<'a>>;
+        let right: Box<HitModel<'a>>;
         if object_span == 1 {
-            left = Rc::clone(&objects[start]);
-            right = Rc::clone(&objects[start]);
+            left = Box::new(objects[start].clone());
+            right = Box::new(objects[start].clone());
         } else if object_span == 2 {
-            let first = Rc::clone(&objects[start]);
-            let second = Rc::clone(&objects[start + 1]);
+            let first = Box::new(objects[start].clone());
+            let second = Box::new(objects[start + 1].clone());
 
             if let Ordering::Less = comparator(&first, &second) {
                 left = first;
@@ -49,13 +50,13 @@ impl BVHNode {
                 right = first;
             }
         } else {
-            &mut objects[start..=end].sort_by(comparator);
+            &mut objects[start..end].sort_by(comparator);
 
             let mid = start + object_span / 2;
 
             // Post-order construction of BVH tree
-            left = Rc::new(BVHNode::new(objects, start, mid, t0, t1));
-            right = Rc::new(BVHNode::new(objects, mid, end, t0, t1));
+            left = Box::new(HitModel::BVH(BVHNode::new(objects, start, mid, t0, t1)));
+            right = Box::new(HitModel::BVH(BVHNode::new(objects, mid, end, t0, t1)));
         }
 
         let box_left = left.bounding_box(t0 as f32, t1 as f32);
@@ -72,7 +73,7 @@ impl BVHNode {
     }
 }
 
-impl Hittable for BVHNode {
+impl Hittable for BVHNode<'_> {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
         if self.bbox.hit(r, tmin, tmax) {
             let hit_left = self.left.hit(r, tmin, tmax);
@@ -94,7 +95,7 @@ impl Hittable for BVHNode {
 }
 
 // For comparison functions, choose to intentionally panic if unable to properly order objects
-fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: usize) -> Option<Ordering> {
+fn box_compare(a: &HitModel, b: &HitModel, axis: usize) -> Option<Ordering> {
     let box_a = a.bounding_box(0.0, 0.0);
     let box_b = b.bounding_box(0.0, 0.0);
 
@@ -108,14 +109,14 @@ fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: usize) -> Optio
     box_a[axis].partial_cmp(&box_b[axis])
 }
 
-fn box_x_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+fn box_x_compare(a: &HitModel, b: &HitModel) -> Ordering {
     box_compare(a, b, 0).unwrap()
 }
 
-fn box_y_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+fn box_y_compare(a: &HitModel, b: &HitModel) -> Ordering {
     box_compare(a, b, 1).unwrap()
 }
 
-fn box_z_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+fn box_z_compare(a: &HitModel, b: &HitModel) -> Ordering {
     box_compare(a, b, 2).unwrap()
 }

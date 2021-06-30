@@ -6,6 +6,7 @@ use crate::{
     vec3::Vec3,
 };
 
+#[derive(Clone)]
 pub struct Translate<'a> {
     hit_model: Box<HitModel<'a>>,
     offset: Vec3,
@@ -50,6 +51,7 @@ impl Hittable for Translate<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct RotateY<'a> {
     hit_model: Box<HitModel<'a>>,
     sin_theta: f32,

@@ -6,6 +6,7 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
+#[derive(Copy, Clone)]
 pub struct XYRect<'a> {
     x0: f32,
     x1: f32,
@@ -60,6 +61,7 @@ impl Hittable for XYRect<'_> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct XZRect<'a> {
     x0: f32,
     x1: f32,
@@ -114,6 +116,7 @@ impl Hittable for XZRect<'_> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct YZRect<'a> {
     y0: f32,
     y1: f32,
@@ -168,6 +171,7 @@ impl Hittable for YZRect<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct Box<'a> {
     box_min: Point3,
     box_max: Point3,

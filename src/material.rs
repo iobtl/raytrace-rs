@@ -19,6 +19,7 @@ pub enum Surface<'a> {
     Metal(Color, f32),
     Dielectric(f32),
     DiffuseLight(SurfaceTexture<'a>),
+    Isotropic(SurfaceTexture<'a>),
 }
 
 impl<'a> Material for Surface<'a> {
@@ -69,6 +70,14 @@ impl<'a> Material for Surface<'a> {
                 };
 
                 let scattered = Ray::new(rec.p, direction, ray.time());
+
+                Some((scattered, attenuation))
+            }
+            Self::Isotropic(albedo) => {
+                // Isotropic volumes scatter light in random directions with certain probability
+                let scattered =
+                    Ray::new(rec.p, random_unit_sphere(&mut rand::thread_rng()), ray.time());
+                let attenuation = albedo.value(rec.u, rec.v, &rec.p);
 
                 Some((scattered, attenuation))
             }
