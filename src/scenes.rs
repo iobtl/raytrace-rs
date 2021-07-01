@@ -326,6 +326,7 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(7.0, 7.0, 7.0)));
     objects.add(HitModel::XZRect(XZRect::new(123.0, 423.0, 147.0, 412.0, 553.0, light)));
 
+    /*
     let center1 = Vec3::new(400.0, 400.0, 200.0);
     let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
     let moving_sphere = HitModel::MovingSphere(MovingSphere::new(
@@ -340,7 +341,7 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
 
     objects.add(HitModel::Sphere(Sphere::new(
         Vec3::new(260.0, 150.0, 45.0),
-        70.0,
+        50.0,
         Surface::Dielectric(1.5),
     )));
     objects.add(HitModel::Sphere(Sphere::new(
@@ -367,6 +368,7 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
         80.0,
         Surface::Lambertian(perlin),
     )));
+    */
 
     let mut boxes2 = Vec::new();
     let white = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.73, 0.73, 0.73)));
@@ -386,6 +388,100 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
         )),
         Vec3::new(-100.0, 270.0, 395.0),
     )));
+
+    (objects, camera, background)
+}
+
+pub fn random_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
+    let mut world = Vec::new();
+    let mut objects = HittableList::new();
+
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let vfov = 20.0;
+    let background = Vec3::new(0.7, 0.8, 1.0);
+
+    let camera =
+        Camera::new(lookfrom, lookat, vup, vfov, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
+
+    let checkered = SurfaceTexture::Checkered(Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9));
+    let ground_material = Surface::Lambertian(checkered);
+
+    let material1 = Surface::Dielectric(1.5);
+    let material2 = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.4, 0.2, 0.1)));
+    let material3 = Surface::Metal(Vec3::new(0.7, 0.6, 0.5), 0.0);
+
+    world.push(HitModel::MovingSphere(MovingSphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        Vec3::new(0.0, -1000.0, 0.0),
+        0.0,
+        1.0,
+        1000.0,
+        ground_material,
+    )));
+
+    let mut rng = rand::thread_rng();
+    for a in -11..11 {
+        for b in -11..11 {
+            let a = a as f32;
+            let b = b as f32;
+
+            let choose_mat = random_double(&mut rng);
+            let center = Vec3::new(
+                a + 0.9 * random_double(&mut rng),
+                0.2,
+                b + 0.9 * random_double(&mut rng),
+            );
+
+            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = color::random() * color::random();
+                    let sphere_material = Surface::Lambertian(SurfaceTexture::Solid(albedo));
+                    let center2 =
+                        center + Vec3::new(0.0, random_double_range(&mut rng, 0.0, 0.5), 0.0);
+                    world.push(HitModel::MovingSphere(MovingSphere::new(
+                        center,
+                        center2,
+                        0.0,
+                        1.0,
+                        0.2,
+                        sphere_material,
+                    )));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = color::random_range(0.5, 1.0);
+                    let fuzz = random_double_range(&mut rng, 0.0, 0.5);
+                    let sphere_material = Surface::Metal(albedo, fuzz);
+                    world.push(HitModel::MovingSphere(MovingSphere::new(
+                        center,
+                        center,
+                        0.0,
+                        1.0,
+                        0.2,
+                        sphere_material,
+                    )));
+                } else {
+                    // glass
+                    let sphere_material = Surface::Dielectric(1.5);
+                    world.push(HitModel::MovingSphere(MovingSphere::new(
+                        center,
+                        center,
+                        0.0,
+                        1.0,
+                        0.2,
+                        sphere_material,
+                    )));
+                }
+            }
+        }
+    }
+
+    let world_len = world.len();
+    objects.add(HitModel::BVH(BVHNode::new(&mut world, 0, world_len, 0, 1)));
 
     (objects, camera, background)
 }

@@ -50,7 +50,7 @@ impl<'a> BVHNode<'a> {
                 right = first;
             }
         } else {
-            &mut objects[start..end].sort_by(comparator);
+            objects[start..end].sort_by(comparator);
 
             let mid = start + object_span / 2;
 
@@ -74,15 +74,23 @@ impl<'a> BVHNode<'a> {
 }
 
 impl Hittable for BVHNode<'_> {
+    // Recursively performs sub-dividing of hit models until hit found or not hits found
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
         if self.bbox.hit(r, tmin, tmax) {
             let hit_left = self.left.hit(r, tmin, tmax);
-            let hit_right = self.right.hit(r, tmin, tmax);
+            let mut max_right = tmax;
 
             if hit_left.is_some() {
-                hit_left
-            } else {
+                let left_rec = hit_left.as_ref().unwrap();
+                max_right = left_rec.t;
+            }
+
+            let hit_right = self.right.hit(r, tmin, max_right);
+
+            if hit_right.is_some() {
                 hit_right
+            } else {
+                hit_left
             }
         } else {
             None

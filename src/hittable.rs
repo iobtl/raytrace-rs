@@ -146,7 +146,7 @@ where
                         temp_box = Some(surrounding_box(bbox, temp_box.unwrap()));
                     }
                     // Every object should have a bounding box
-                    None => break,
+                    None => panic!("Unable to construct bounding box for object"),
                 }
             }
 

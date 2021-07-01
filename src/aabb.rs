@@ -43,7 +43,7 @@ impl AABB {
             let tmin = t0.max(tmin);
             let tmax = t1.min(tmax);
 
-            if tmin <= tmax {
+            if tmax <= tmin {
                 return false;
             }
         }
