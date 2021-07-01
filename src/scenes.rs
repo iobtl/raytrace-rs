@@ -326,7 +326,6 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(7.0, 7.0, 7.0)));
     objects.add(HitModel::XZRect(XZRect::new(123.0, 423.0, 147.0, 412.0, 553.0, light)));
 
-    /*
     let center1 = Vec3::new(400.0, 400.0, 200.0);
     let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
     let moving_sphere = HitModel::MovingSphere(MovingSphere::new(
@@ -368,7 +367,6 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
         80.0,
         Surface::Lambertian(perlin),
     )));
-    */
 
     let mut boxes2 = Vec::new();
     let white = Surface::Lambertian(SurfaceTexture::Solid(Vec3::new(0.73, 0.73, 0.73)));
@@ -392,9 +390,8 @@ pub fn final_scene<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     (objects, camera, background)
 }
 
-pub fn random_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
+pub fn random_bvh<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let mut world = Vec::new();
-    let mut objects = HittableList::new();
 
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -480,6 +477,32 @@ pub fn random_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
         }
     }
 
+    world.push(HitModel::MovingSphere(MovingSphere::new(
+        Vec3::new(0.0, 1.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material1,
+    )));
+    world.push(HitModel::MovingSphere(MovingSphere::new(
+        Vec3::new(-4.0, 1.0, 0.0),
+        Vec3::new(-4.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material2,
+    )));
+    world.push(HitModel::MovingSphere(MovingSphere::new(
+        Vec3::new(4.0, 1.0, 0.0),
+        Vec3::new(4.0, 1.0, 0.0),
+        0.0,
+        1.0,
+        1.0,
+        material3,
+    )));
+
+    let mut objects = HittableList::new();
     let world_len = world.len();
     objects.add(HitModel::BVH(BVHNode::new(&mut world, 0, world_len, 0, 1)));
 
