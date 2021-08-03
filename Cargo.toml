@@ -11,7 +11,3 @@ rand = "0.8.4"
 rayon = "1.5"
 indicatif = { version = "0.16.2", features = ["rayon"] }
 image = "0.23.14"
-bytemuck = { version = "1.5.1", features = ["derive"] }
-
-[profile.release]
-debug = true

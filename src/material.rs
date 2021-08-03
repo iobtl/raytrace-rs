@@ -8,7 +8,7 @@ use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
 // Required behaviour:
 // 1. Produce a scattered ray (or say it absorbed the incident ray)
 // 2. If scattered, determine how much the ray should be attenuated
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color)>;
     fn emit(&self, u: f32, v: f32, p: &Point3) -> Color;
 }

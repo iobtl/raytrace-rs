@@ -48,14 +48,13 @@ impl Camera {
     }
 
     pub fn ray_at(&self, s: f32, t: f32) -> Ray {
-        let Camera { origin, lower_left, horizontal, vertical, u, v, lens_radius, t0, t1, .. } =
-            *self;
-        let rd = random_unit_disk(&mut rand::thread_rng()) * lens_radius;
-        let offset = u * rd.x() + v * rd.y();
+        let mut rng = rand::thread_rng();
+        let rd = random_unit_disk(&mut rng) * self.lens_radius;
+        let offset = self.u * rd.x() + self.v * rd.y();
         Ray::new(
-            origin + offset,
-            lower_left + horizontal * s + vertical * t - origin - offset,
-            random_double_range(&mut rand::thread_rng(), t0, t1),
+            self.origin + offset,
+            self.lower_left + self.horizontal * s + self.vertical * t - self.origin - offset,
+            random_double_range(&mut rng, 0.0, 1.0),
         )
     }
 }

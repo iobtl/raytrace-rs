@@ -10,6 +10,7 @@ use crate::{
     volumes::Constant,
 };
 
+#[derive(Copy, Clone)]
 pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
@@ -40,7 +41,7 @@ impl<'a> HitRecord<'a> {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
 }

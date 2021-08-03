@@ -24,7 +24,7 @@ pub fn random_vec_range(rng: &mut ThreadRng, min: f32, max: f32) -> Vec3 {
 }
 
 pub fn random_double(rng: &mut ThreadRng) -> f32 {
-    (*rng).gen::<f32>()
+    rng.gen::<f32>()
 }
 
 pub fn random_double_range(rng: &mut ThreadRng, min: f32, max: f32) -> f32 {
@@ -32,11 +32,11 @@ pub fn random_double_range(rng: &mut ThreadRng, min: f32, max: f32) -> f32 {
 }
 
 pub fn random_int(rng: &mut ThreadRng) -> i32 {
-    (*rng).gen::<i32>()
+    rng.gen::<i32>()
 }
 
 pub fn random_int_range(rng: &mut ThreadRng, min: i32, max: i32) -> i32 {
-    (*rng).gen_range(min..=max)
+    rng.gen_range(min..=max)
 }
 
 // Reject points picked from unit cube until falls inside a unit sphere
@@ -68,10 +68,10 @@ pub fn random_unit_disk(rng: &mut ThreadRng) -> Vec3 {
     let p =
         Vec3::new(random_double_range(rng, -1.0, 1.0), random_double_range(rng, -1.0, 1.0), 0.0);
 
-    if p.length_squared() >= 1.0 {
-        random_unit_disk(rng)
-    } else {
+    if p.length_squared() < 1.0 {
         p
+    } else {
+        random_unit_disk(rng)
     }
 }
 
