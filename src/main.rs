@@ -29,8 +29,8 @@ use crate::color::process_color;
 use utility::*;
 
 // Image dimensions
-const ASPECT_RATIO: f32 = 1.0;
-const IMG_WIDTH: u32 = 600;
+const ASPECT_RATIO: f32 = 16.0 / 9.0;
+const IMG_WIDTH: u32 = 800;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
 const SAMPLES_PER_PIXEL: i32 = 200;
 const MAX_DEPTH: i32 = 50;
