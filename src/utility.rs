@@ -85,7 +85,7 @@ pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
     }
 }
 
-// Sampling random points on hemisphere with PDF cos(theta) / PI.
+// Cosine-weighted hemisphere sampling using spherical coordinates.
 pub fn random_cosine_direction(rng: &mut ThreadRng) -> Vec3 {
     let r1 = random_double(rng);
     let r2 = random_double(rng);

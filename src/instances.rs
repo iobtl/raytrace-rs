@@ -157,3 +157,28 @@ impl<'a> Hittable for RotateY<'a> {
         self.bbox
     }
 }
+
+#[derive(Clone)]
+pub struct FlipFace<'a> {
+    hit_model: Box<HitModel<'a>>,
+}
+
+impl<'a> FlipFace<'a> {
+    pub fn new(hit_model: HitModel<'a>) -> Self {
+        FlipFace { hit_model: Box::new(hit_model) }
+    }
+}
+
+impl Hittable for FlipFace<'_> {
+    fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
+        // Flip light faces so normals point in -y direction.
+        self.hit_model.hit(r, tmin, tmax).and_then(|mut rec| {
+            rec.front_face = !rec.front_face;
+            Some(rec)
+        })
+    }
+
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        self.hit_model.bounding_box(t0, t1)
+    }
+}

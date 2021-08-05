@@ -12,7 +12,7 @@ use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
 pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color, f32)>;
     fn scattering_pdf(&self, ray: &Ray, rec: &HitRecord, scattered: &Ray) -> f32;
-    fn emit(&self, u: f32, v: f32, p: &Point3) -> Color;
+    fn emit(&self, ray: &Ray, rec: &HitRecord, u: f32, v: f32, p: &Point3) -> Color;
 }
 
 #[derive(Copy, Clone)]
@@ -109,9 +109,16 @@ impl<'a> Material for Surface<'a> {
             _ => panic!(),
         }
     }
-    fn emit(&self, u: f32, v: f32, p: &Point3) -> Color {
+    fn emit(&self, ray: &Ray, rec: &HitRecord, u: f32, v: f32, p: &Point3) -> Color {
         match self {
-            Self::DiffuseLight(texture) => texture.value(u, v, p),
+            Self::DiffuseLight(texture) => {
+                // Only allow lights to emit light from their front surfaces.
+                if rec.front_face {
+                    texture.value(u, v, p)
+                } else {
+                    Color::new(0.0, 0.0, 0.0)
+                }
+            }
             _ => Vec3::new(0.0, 0.0, 0.0),
         }
     }

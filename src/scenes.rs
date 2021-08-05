@@ -5,7 +5,7 @@ use image::{ImageBuffer, Rgb};
 use crate::bvh::BVHNode;
 use crate::camera::Camera;
 use crate::hittable::HitModel;
-use crate::instances::{RotateY, Translate};
+use crate::instances::{FlipFace, RotateY, Translate};
 use crate::perlin::Perlin;
 use crate::rect::{Box, XYRect, XZRect, YZRect};
 use crate::sphere::Sphere;
@@ -226,7 +226,9 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
 
     objects.add(HitModel::YZRect(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
     objects.add(HitModel::YZRect(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
-    objects.add(HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light)));
+    objects.add(HitModel::FlipFace(FlipFace::new(HitModel::XZRect(XZRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )))));
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(HitModel::XYRect(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));

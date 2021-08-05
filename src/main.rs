@@ -23,7 +23,7 @@ pub mod volumes;
 use hittable::{Hittable, HittableList};
 use material::Material;
 use ray::Ray;
-use vec3::{Color, Vec3};
+use vec3::{Color, Point3, Vec3};
 
 use crate::color::process_color;
 use utility::*;
@@ -41,8 +41,31 @@ fn ray_color<T: Hittable>(r: Ray, background: Color, world: &HittableList<T>, de
         Vec3::new(0.0, 0.0, 0.0)
     } else {
         if let Some(hit_rec) = world.hit(&r, 0.001, INFINITY) {
-            let emitted = hit_rec.material.emit(hit_rec.u, hit_rec.v, &hit_rec.p);
+            let emitted = hit_rec.material.emit(&r, &hit_rec, hit_rec.u, hit_rec.v, &hit_rec.p);
             if let Some((scattered, albedo, pdf)) = hit_rec.material.scatter(&r, &hit_rec) {
+                let mut rng = rand::thread_rng();
+                let on_light = Point3::new(
+                    random_double_range(&mut rng, 213.0, 343.0),
+                    554.0,
+                    random_double_range(&mut rng, 227.0, 332.0),
+                );
+                let to_light = on_light - hit_rec.p;
+                let dist_squared = to_light.length_squared();
+                let to_light = vec3::unit_vector(&to_light);
+
+                if to_light.dot(&hit_rec.normal) < 0.0 {
+                    return emitted;
+                }
+
+                let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+                let light_cosine = to_light.y().abs();
+                if light_cosine < 0.000001 {
+                    return emitted;
+                }
+
+                let pdf = dist_squared / (light_cosine * light_area);
+                let scattered = Ray::new(hit_rec.p, to_light, r.time());
+
                 emitted
                     + albedo
                         * hit_rec.material.scattering_pdf(&r, &hit_rec, &scattered)

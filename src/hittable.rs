@@ -1,7 +1,7 @@
 use crate::{
     aabb::{surrounding_box, AABB},
     bvh::BVHNode,
-    instances::{RotateY, Translate},
+    instances::{FlipFace, RotateY, Translate},
     material::Surface,
     ray::Ray,
     rect::{Box, XYRect, XZRect, YZRect},
@@ -57,6 +57,7 @@ pub enum HitModel<'a> {
     Box(Box<'a>),
     Translate(Translate<'a>),
     RotateY(RotateY<'a>),
+    FlipFace(FlipFace<'a>),
     Constant(Constant<'a>),
 }
 
@@ -72,6 +73,7 @@ impl Hittable for HitModel<'_> {
             Self::Box(_box) => _box.hit(r, tmin, tmax),
             Self::Translate(translate) => translate.hit(r, tmin, tmax),
             Self::RotateY(rotate) => rotate.hit(r, tmin, tmax),
+            Self::FlipFace(rotate) => rotate.hit(r, tmin, tmax),
             Self::Constant(volume) => volume.hit(r, tmin, tmax),
         }
     }
@@ -87,6 +89,7 @@ impl Hittable for HitModel<'_> {
             Self::Box(_box) => _box.bounding_box(t0, t1),
             Self::Translate(translate) => translate.bounding_box(t0, t1),
             Self::RotateY(rotate) => rotate.bounding_box(t0, t1),
+            Self::FlipFace(rotate) => rotate.bounding_box(t0, t1),
             Self::Constant(volume) => volume.bounding_box(t0, t1),
         }
     }
