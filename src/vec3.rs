@@ -58,6 +58,36 @@ impl Vec3 {
     }
 }
 
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    *v / v.length()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    let b = v.dot(n);
+    *v - (*n * b * 2.0)
+}
+
+pub fn refract(uv: &Vec3, n: &Vec3, eta_etaprime: f32) -> Vec3 {
+    let cos_theta = (-*uv).dot(n).min(1.0);
+
+    let r_out_h = (*uv + *n * cos_theta) * eta_etaprime;
+    let r_out_v = *n * -((1.0 - r_out_h.length_squared()).abs().sqrt());
+    r_out_h + r_out_v
+}
+
+pub fn unpack(v: &Vec3) -> [f32; 3] {
+    [v.x(), v.y(), v.z()]
+}
+
+pub fn coordinate_system(n: &Vec3) -> [Vec3; 3] {
+    let n = unit_vector(n);
+    let a = if n.x().abs() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
+    let t = unit_vector(&n.cross(&a));
+    let s = t.cross(&n);
+
+    [s, t, n]
+}
+
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, other: Self) {
         self.elems[0] += other.elems[0];
@@ -166,25 +196,4 @@ impl Neg for Vec3 {
     fn neg(self) -> Self::Output {
         Self { elems: [-self.elems[0], -self.elems[1], -self.elems[2]] }
     }
-}
-
-pub fn unit_vector(v: &Vec3) -> Vec3 {
-    *v / v.length()
-}
-
-pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    let b = v.dot(n);
-    *v - (*n * b * 2.0)
-}
-
-pub fn refract(uv: &Vec3, n: &Vec3, eta_etaprime: f32) -> Vec3 {
-    let cos_theta = (-*uv).dot(n).min(1.0);
-
-    let r_out_h = (*uv + *n * cos_theta) * eta_etaprime;
-    let r_out_v = *n * -((1.0 - r_out_h.length_squared()).abs().sqrt());
-    r_out_h + r_out_v
-}
-
-pub fn unpack(v: &Vec3) -> [f32; 3] {
-    [v.x(), v.y(), v.z()]
 }

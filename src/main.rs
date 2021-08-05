@@ -29,7 +29,7 @@ use crate::color::process_color;
 use utility::*;
 
 // Image dimensions
-const ASPECT_RATIO: f32 = 16.0 / 9.0;
+const ASPECT_RATIO: f32 = 1.0;
 const IMG_WIDTH: u32 = 800;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
 const SAMPLES_PER_PIXEL: i32 = 200;
@@ -42,8 +42,12 @@ fn ray_color<T: Hittable>(r: Ray, background: Color, world: &HittableList<T>, de
     } else {
         if let Some(hit_rec) = world.hit(&r, 0.001, INFINITY) {
             let emitted = hit_rec.material.emit(hit_rec.u, hit_rec.v, &hit_rec.p);
-            if let Some((scattered, attenuation)) = hit_rec.material.scatter(&r, &hit_rec) {
-                emitted + attenuation * ray_color(scattered, background, world, depth - 1)
+            if let Some((scattered, albedo, pdf)) = hit_rec.material.scatter(&r, &hit_rec) {
+                emitted
+                    + albedo
+                        * hit_rec.material.scattering_pdf(&r, &hit_rec, &scattered)
+                        * ray_color(scattered, background, world, depth - 1)
+                        / pdf
             } else {
                 emitted
             }
@@ -59,7 +63,7 @@ fn main() -> io::Result<()> {
     stream.write_all(format!("P3\n{} {}\n255\n", IMG_WIDTH, IMG_HEIGHT).as_bytes())?;
 
     // World initialization
-    let (world, camera, background) = scenes::random_bvh();
+    let (world, camera, background) = scenes::cornell_box();
 
     let t0 = std::time::Instant::now();
     let pb = ProgressBar::new(IMG_HEIGHT.into());

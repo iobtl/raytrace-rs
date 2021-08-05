@@ -213,7 +213,7 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let lookat = Vec3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
+    let aperture = 0.0;
     let vfov = 40.0;
     let background = Vec3::new(0.0, 0.0, 0.0);
 
