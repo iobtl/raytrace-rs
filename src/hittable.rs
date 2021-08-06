@@ -99,6 +99,38 @@ impl Hittable for HitModel<'_> {
             Self::Constant(volume) => volume.bounding_box(t0, t1),
         }
     }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f32 {
+        match self {
+            Self::Sphere(sphere) => sphere.pdf_value(origin, v),
+            Self::MovingSphere(sphere) => sphere.pdf_value(origin, v),
+            Self::BVH(bvh) => bvh.pdf_value(origin, v),
+            Self::XYRect(rect) => rect.pdf_value(origin, v),
+            Self::XZRect(rect) => rect.pdf_value(origin, v),
+            Self::YZRect(rect) => rect.pdf_value(origin, v),
+            Self::Box(_box) => _box.pdf_value(origin, v),
+            Self::Translate(translate) => translate.pdf_value(origin, v),
+            Self::RotateY(rotate) => rotate.pdf_value(origin, v),
+            Self::FlipFace(rotate) => rotate.pdf_value(origin, v),
+            Self::Constant(volume) => volume.pdf_value(origin, v),
+        }
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        match self {
+            Self::Sphere(sphere) => sphere.random(origin),
+            Self::MovingSphere(sphere) => sphere.random(origin),
+            Self::BVH(bvh) => bvh.random(origin),
+            Self::XYRect(rect) => rect.random(origin),
+            Self::XZRect(rect) => rect.random(origin),
+            Self::YZRect(rect) => rect.random(origin),
+            Self::Box(_box) => _box.random(origin),
+            Self::Translate(translate) => translate.random(origin),
+            Self::RotateY(rotate) => rotate.random(origin),
+            Self::FlipFace(rotate) => rotate.random(origin),
+            Self::Constant(volume) => volume.random(origin),
+        }
+    }
 }
 
 // Using generics implementation since only dealing with spheres for now

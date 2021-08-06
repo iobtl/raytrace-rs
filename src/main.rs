@@ -56,6 +56,7 @@ fn ray_color<'a, T: Hittable>(
                 let p0 = HittablePDF::new(&hit_rec.p, lights);
                 let p1 = CosinePDF::new(&hit_rec.normal);
                 let mixed_pdf = MixturePDF::new(PDF::Hittable(p0), PDF::Cosine(p1));
+
                 let scattered = Ray::new(hit_rec.p, mixed_pdf.generate(), r.time());
                 let pdf = mixed_pdf.value(scattered.direction());
 

@@ -29,6 +29,7 @@ impl<'a> Material for Surface<'a> {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color, f32)> {
         match self {
             Self::Lambertian(albedo) => {
+                // Construct BRDF space.
                 let uvw = vec3::coordinate_system(&rec.normal);
                 let random_cos = random_cosine_direction(&mut rand::thread_rng());
                 let mut scatter_direction = uvw.local_vec(&random_cos);
@@ -40,8 +41,8 @@ impl<'a> Material for Surface<'a> {
 
                 let scattered = Ray::new(rec.p, vec3::unit_vector(&scatter_direction), ray.time());
                 let alb = albedo.value(rec.u, rec.v, &rec.p);
-                // Importance sampling by allowing PDF to be equal to scattering_pdf.
-                let pdf = scattered.direction().dot(&uvw[2]) / PI;
+                // Importance sampling by allowing PDF to be equal to scattering_pdf. (cos_theta / PI)
+                let pdf = uvw.w().dot(scattered.direction()) / PI;
 
                 Some((scattered, alb, pdf))
             }

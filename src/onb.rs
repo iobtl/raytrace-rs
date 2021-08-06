@@ -9,7 +9,7 @@ pub struct ONB {
 impl ONB {
     pub fn new(w: &Vec3) -> Self {
         let w = vec3::unit_vector(w);
-        let a = if w.x() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
+        let a = if w.x().abs() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
         let v = vec3::unit_vector(&w.cross(&a));
         let u = w.cross(&v);
 
