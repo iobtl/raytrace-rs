@@ -84,17 +84,3 @@ pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
         x
     }
 }
-
-// Cosine-weighted hemisphere sampling using spherical coordinates.
-pub fn random_cosine_direction(rng: &mut ThreadRng) -> Vec3 {
-    let r1 = random_double(rng);
-    let r2 = random_double(rng);
-    let r2_sqrt = r2.sqrt();
-    let z = (1.0 - r2).sqrt();
-    let phi = 2.0 * PI * r1;
-
-    let x = phi.cos() * r2_sqrt;
-    let y = phi.sin() * r2_sqrt;
-
-    Vec3::new(x, y, z)
-}

@@ -3,6 +3,7 @@ use crate::{
     hittable::{HitModel, HitRecord, Hittable, HittableList},
     material::Surface,
     ray::Ray,
+    utility::random_double_range,
     vec3::{Point3, Vec3},
 };
 
@@ -113,6 +114,29 @@ impl Hittable for XZRect<'_> {
             Vec3::new(self.x0, self.z0, self.k - 0.0001),
             Vec3::new(self.x1, self.z1, self.k + 0.0001),
         ))
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f32 {
+        if let Some(hit_rec) = self.hit(&Ray::new(*origin, *v, 0.0), 0.001, f32::INFINITY) {
+            let area = (self.x1 - self.x0) * (self.z1 - self.z0);
+            let dist_squared = hit_rec.t * hit_rec.t * v.length_squared();
+            let cosine = (v.dot(&hit_rec.normal) / v.length()).abs();
+
+            dist_squared / (cosine * area)
+        } else {
+            0.0
+        }
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let random_point = Point3::new(
+            random_double_range(&mut rng, self.x0, self.x1),
+            self.k,
+            random_double_range(&mut rng, self.z0, self.z1),
+        );
+
+        random_point - *origin
     }
 }
 

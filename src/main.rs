@@ -1,4 +1,5 @@
 use indicatif::{ParallelProgressIterator, ProgressBar};
+use pdf::{CosinePDF, HittablePDF, MixturePDF, PDF};
 use rand::Rng;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
@@ -10,6 +11,8 @@ pub mod color;
 pub mod hittable;
 pub mod instances;
 pub mod material;
+pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod ray;
 pub mod rect;
@@ -20,22 +23,28 @@ pub mod utility;
 pub mod vec3;
 pub mod volumes;
 
-use hittable::{Hittable, HittableList};
+use hittable::{HitModel, Hittable, HittableList};
 use material::Material;
 use ray::Ray;
 use vec3::{Color, Point3, Vec3};
 
-use crate::color::process_color;
+use crate::{color::process_color, material::Surface, rect::XZRect, texture::SurfaceTexture};
 use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 1.0;
-const IMG_WIDTH: u32 = 800;
+const IMG_WIDTH: u32 = 600;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 200;
+const SAMPLES_PER_PIXEL: i32 = 100;
 const MAX_DEPTH: i32 = 50;
 
-fn ray_color<T: Hittable>(r: Ray, background: Color, world: &HittableList<T>, depth: i32) -> Color {
+fn ray_color<'a, T: Hittable>(
+    r: Ray,
+    background: Color,
+    world: &HittableList<T>,
+    lights: &HitModel<'a>,
+    depth: i32,
+) -> Color {
     // Limit number of ray bounces
     if depth <= 0 {
         Vec3::new(0.0, 0.0, 0.0)
@@ -44,32 +53,16 @@ fn ray_color<T: Hittable>(r: Ray, background: Color, world: &HittableList<T>, de
             let emitted = hit_rec.material.emit(&r, &hit_rec, hit_rec.u, hit_rec.v, &hit_rec.p);
             if let Some((scattered, albedo, pdf)) = hit_rec.material.scatter(&r, &hit_rec) {
                 let mut rng = rand::thread_rng();
-                let on_light = Point3::new(
-                    random_double_range(&mut rng, 213.0, 343.0),
-                    554.0,
-                    random_double_range(&mut rng, 227.0, 332.0),
-                );
-                let to_light = on_light - hit_rec.p;
-                let dist_squared = to_light.length_squared();
-                let to_light = vec3::unit_vector(&to_light);
-
-                if to_light.dot(&hit_rec.normal) < 0.0 {
-                    return emitted;
-                }
-
-                let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-                let light_cosine = to_light.y().abs();
-                if light_cosine < 0.000001 {
-                    return emitted;
-                }
-
-                let pdf = dist_squared / (light_cosine * light_area);
-                let scattered = Ray::new(hit_rec.p, to_light, r.time());
+                let p0 = HittablePDF::new(&hit_rec.p, lights);
+                let p1 = CosinePDF::new(&hit_rec.normal);
+                let mixed_pdf = MixturePDF::new(PDF::Hittable(p0), PDF::Cosine(p1));
+                let scattered = Ray::new(hit_rec.p, mixed_pdf.generate(), r.time());
+                let pdf = mixed_pdf.value(scattered.direction());
 
                 emitted
                     + albedo
                         * hit_rec.material.scattering_pdf(&r, &hit_rec, &scattered)
-                        * ray_color(scattered, background, world, depth - 1)
+                        * ray_color(scattered, background, world, lights, depth - 1)
                         / pdf
             } else {
                 emitted
@@ -87,6 +80,8 @@ fn main() -> io::Result<()> {
 
     // World initialization
     let (world, camera, background) = scenes::cornell_box();
+    let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(15.0, 15.0, 15.0)));
+    let lights = HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light));
 
     let t0 = std::time::Instant::now();
     let pb = ProgressBar::new(IMG_HEIGHT.into());
@@ -107,7 +102,7 @@ fn main() -> io::Result<()> {
                             let u = ((i as f32) + rng.gen::<f32>()) / ((IMG_WIDTH - 1) as f32);
                             let v = ((j as f32) + rng.gen::<f32>()) / ((IMG_HEIGHT - 1) as f32);
                             let r = camera.ray_at(u, v);
-                            acc + ray_color(r, background, &world, MAX_DEPTH)
+                            acc + ray_color(r, background, &world, &lights, MAX_DEPTH)
                         },
                     );
 

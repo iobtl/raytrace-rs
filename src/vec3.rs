@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
+use crate::onb::ONB;
+
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
@@ -79,13 +81,8 @@ pub fn unpack(v: &Vec3) -> [f32; 3] {
     [v.x(), v.y(), v.z()]
 }
 
-pub fn coordinate_system(n: &Vec3) -> [Vec3; 3] {
-    let n = unit_vector(n);
-    let a = if n.x().abs() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
-    let t = unit_vector(&n.cross(&a));
-    let s = t.cross(&n);
-
-    [s, t, n]
+pub fn coordinate_system(n: &Vec3) -> ONB {
+    ONB::new(n)
 }
 
 impl AddAssign for Vec3 {

@@ -1,3 +1,4 @@
+use crate::pdf::random_cosine_direction;
 use crate::texture::SurfaceTexture;
 use crate::texture::Texture;
 use crate::utility::*;
@@ -30,8 +31,7 @@ impl<'a> Material for Surface<'a> {
             Self::Lambertian(albedo) => {
                 let uvw = vec3::coordinate_system(&rec.normal);
                 let random_cos = random_cosine_direction(&mut rand::thread_rng());
-                let mut scatter_direction =
-                    uvw[0] * random_cos.x() + uvw[1] * random_cos.y() + uvw[2] * random_cos.z();
+                let mut scatter_direction = uvw.local_vec(&random_cos);
 
                 // Catch degenerate scatter direction (almost exactly opposite to normal)
                 if scatter_direction.near_zero() {

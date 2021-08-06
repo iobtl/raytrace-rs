@@ -44,6 +44,12 @@ impl<'a> HitRecord<'a> {
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f32 {
+        0.0
+    }
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        Vec3::new(1.0, 0.0, 0.0)
+    }
 }
 // Wrapper class to avoid dealing with trait objects
 #[derive(Clone)]
