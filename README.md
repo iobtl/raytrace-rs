@@ -1,10 +1,15 @@
 # raytrace-rs
 
-A simple ray-tracing project following [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html) by Peter Shirley. Implemented with [Rust](https://www.rust-lang.org/).
+A ray-tracing engine adapted from the "Ray Tracing" series by Peter Shirley. Namely, the resources are:
+1. [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+2. [Ray Tracing: The Next Week](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
+3. [Ray Tracing: The Rest of Your Life](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
 
-Snapshot of [final render](final.ppm):
+Fully implemented in [Rust](https://www.rust-lang.org/).
 
-![image](https://user-images.githubusercontent.com/59901837/123538438-851ff700-d767-11eb-9e68-348f835efe89.png)
+Some of the renders:
+![random_scene](./images/random_scene.ppm)
+![cornell_glass](./images/cornell_glass.ppm)
 
 ## Requirements
 `rand`: 0.8.4
@@ -12,3 +17,5 @@ Snapshot of [final render](final.ppm):
 `rayon`: 1.5
 
 `indicatif`: 0.16.2
+
+`image`: 0.23.14

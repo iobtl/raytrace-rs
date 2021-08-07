@@ -135,6 +135,6 @@ fn main() -> io::Result<()> {
     });
 
     eprintln!("\nDone!\n");
-    eprintln!("Time elapsed: {}s\n", t0.elapsed().as_secs_f64());
+    eprintln!("Time elapsed: {:.2}s\n", t0.elapsed().as_secs_f64());
     Ok(())
 }
