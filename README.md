@@ -8,8 +8,8 @@ A ray-tracing engine adapted from the "Ray Tracing" series by Peter Shirley. Nam
 Fully implemented in [Rust](https://www.rust-lang.org/).
 
 Some of the renders:
-![random_scene](./images/random_scene.ppm)
-![cornell_glass](./images/cornell_glass.ppm)
+![](./images/random_scene.png)
+![](./images/cornell_glass.png)
 
 ## Requirements
 `rand`: 0.8.4
