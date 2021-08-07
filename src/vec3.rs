@@ -115,6 +115,14 @@ impl Add<f32> for Vec3 {
     }
 }
 
+impl Add<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn add(self, other: Vec3) -> Self::Output {
+        Vec3::new(other.x() + self, other.y() + self, other.z() + self)
+    }
+}
+
 impl Sub<Vec3> for Vec3 {
     type Output = Self;
 
@@ -129,19 +137,27 @@ impl Sub<Vec3> for Vec3 {
     }
 }
 
+impl Sub<f32> for Vec3 {
+    type Output = Self;
+
+    fn sub(self, other: f32) -> Self::Output {
+        Self { elems: [self.elems[0] - other, self.elems[1] - other, self.elems[2] - other] }
+    }
+}
+
+impl Sub<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Self::Output {
+        Vec3::new(other.x() - self, other.y() - self, other.z() - self)
+    }
+}
+
 impl MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, other: f32) {
         self.elems[0] *= other;
         self.elems[1] *= other;
         self.elems[2] *= other;
-    }
-}
-
-impl Mul<f32> for Vec3 {
-    type Output = Self;
-
-    fn mul(self, other: f32) -> Self::Output {
-        Self { elems: [self.elems[0] * other, self.elems[1] * other, self.elems[2] * other] }
     }
 }
 
@@ -159,17 +175,25 @@ impl Mul<Vec3> for Vec3 {
     }
 }
 
-impl DivAssign<f32> for Vec3 {
-    fn div_assign(&mut self, other: f32) {
-        Self { elems: [self.elems[0] / other, self.elems[1] / other, self.elems[2] / other] };
+impl Mul<f32> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: f32) -> Self::Output {
+        Self { elems: [self.elems[0] * other, self.elems[1] * other, self.elems[2] * other] }
     }
 }
 
-impl Div<f32> for Vec3 {
-    type Output = Self;
+impl Mul<Vec3> for f32 {
+    type Output = Vec3;
 
-    fn div(self, other: f32) -> Self::Output {
-        Self { elems: [self.elems[0] / other, self.elems[1] / other, self.elems[2] / other] }
+    fn mul(self, other: Vec3) -> Self::Output {
+        Vec3::new(other.x() * self, other.y() * self, other.z() * self)
+    }
+}
+
+impl DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, other: f32) {
+        Self { elems: [self.elems[0] / other, self.elems[1] / other, self.elems[2] / other] };
     }
 }
 
@@ -184,6 +208,22 @@ impl Div<Vec3> for Vec3 {
                 self.elems[2] / other.elems[2],
             ],
         }
+    }
+}
+
+impl Div<f32> for Vec3 {
+    type Output = Self;
+
+    fn div(self, other: f32) -> Self::Output {
+        Self { elems: [self.elems[0] / other, self.elems[1] / other, self.elems[2] / other] }
+    }
+}
+
+impl Div<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn div(self, other: Vec3) -> Self::Output {
+        Vec3::new(other.x() / self, other.y() / self, other.z() / self)
     }
 }
 

@@ -1,5 +1,5 @@
 use indicatif::{ParallelProgressIterator, ProgressBar};
-use pdf::{CosinePDF, HittablePDF, MixturePDF, PDF};
+use pdf::{HittablePDF, MixturePDF, UniformPDF, PDF};
 use rand::Rng;
 use rayon::prelude::*;
 use std::io::{self, BufWriter, Write};
@@ -28,40 +28,52 @@ use material::Material;
 use ray::Ray;
 use vec3::{Color, Point3, Vec3};
 
-use crate::{color::process_color, material::Surface, rect::XZRect, texture::SurfaceTexture};
+use crate::{
+    color::process_color, material::Surface, rect::XZRect, sphere::Sphere, texture::SurfaceTexture,
+};
 use utility::*;
 
 // Image dimensions
 const ASPECT_RATIO: f32 = 1.0;
 const IMG_WIDTH: u32 = 600;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 100;
+const SAMPLES_PER_PIXEL: i32 = 1000;
 const MAX_DEPTH: i32 = 50;
 
-fn ray_color<'a, T: Hittable>(
+fn ray_color<'a>(
     r: Ray,
     background: Color,
-    world: &HittableList<T>,
-    lights: &HitModel<'a>,
+    world: &HittableList<HitModel<'a>>,
+    lights: &HittableList<HitModel<'a>>,
     depth: i32,
 ) -> Color {
     // Limit number of ray bounces
     if depth <= 0 {
-        Vec3::new(0.0, 0.0, 0.0)
+        Color::new(0.0, 0.0, 0.0)
     } else {
         if let Some(hit_rec) = world.hit(&r, 0.001, INFINITY) {
             let emitted = hit_rec.material.emit(&r, &hit_rec, hit_rec.u, hit_rec.v, &hit_rec.p);
-            if let Some((scattered, albedo, pdf)) = hit_rec.material.scatter(&r, &hit_rec) {
-                let mut rng = rand::thread_rng();
-                let p0 = HittablePDF::new(&hit_rec.p, lights);
-                let p1 = CosinePDF::new(&hit_rec.normal);
-                let mixed_pdf = MixturePDF::new(PDF::Hittable(p0), PDF::Cosine(p1));
+            if let Some(srec) = hit_rec.material.scatter(&r, &hit_rec) {
+                if srec.is_specular {
+                    return srec.attenuation
+                        * ray_color(
+                            srec.specular_ray.unwrap(),
+                            background,
+                            world,
+                            lights,
+                            depth - 1,
+                        );
+                }
+
+                let p0 = PDF::Hittable(HittablePDF::new(&hit_rec.p, lights));
+                let p1 = srec.pdf.unwrap_or(PDF::Uniform(UniformPDF::new(&hit_rec.normal)));
+                let mixed_pdf = MixturePDF::new(p0, p1);
 
                 let scattered = Ray::new(hit_rec.p, mixed_pdf.generate(), r.time());
                 let pdf = mixed_pdf.value(scattered.direction());
 
                 emitted
-                    + albedo
+                    + srec.attenuation
                         * hit_rec.material.scattering_pdf(&r, &hit_rec, &scattered)
                         * ray_color(scattered, background, world, lights, depth - 1)
                         / pdf
@@ -82,7 +94,9 @@ fn main() -> io::Result<()> {
     // World initialization
     let (world, camera, background) = scenes::cornell_box();
     let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(15.0, 15.0, 15.0)));
-    let lights = HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light));
+    let mut lights = Box::new(HittableList::new());
+    lights.add(HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light)));
+    lights.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, light)));
 
     let t0 = std::time::Instant::now();
     let pb = ProgressBar::new(IMG_HEIGHT.into());

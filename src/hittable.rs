@@ -1,3 +1,5 @@
+use rand::thread_rng;
+
 use crate::{
     aabb::{surrounding_box, AABB},
     bvh::BVHNode,
@@ -6,6 +8,7 @@ use crate::{
     ray::Ray,
     rect::{Box, XYRect, XZRect, YZRect},
     sphere::{MovingSphere, Sphere},
+    utility::random_int_range,
     vec3::{Point3, Vec3},
     volumes::Constant,
 };
@@ -151,11 +154,13 @@ where
         Vec::push(&mut self.objects, object);
     }
 
-    pub fn objects(&mut self) -> &mut Vec<T> {
-        &mut self.objects
+    pub fn objects(&self) -> &Vec<T> {
+        &self.objects
     }
+}
 
-    pub fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
+impl<T: Hittable> Hittable for HittableList<T> {
+    fn hit(&self, r: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord> {
         let mut temp_rec: Option<HitRecord> = None;
         let mut closest_t = tmax;
 
@@ -173,7 +178,7 @@ where
         temp_rec
     }
 
-    pub fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
         if self.objects.is_empty() {
             None
         } else {
@@ -194,5 +199,20 @@ where
 
             temp_box
         }
+    }
+
+    // Builds a mixture PDF from the `Hittable`s in this `HittableList`.
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f32 {
+        let weight = 1.0 / self.objects().len() as f32;
+        let sum = self.objects().iter().map(|obj| weight * obj.pdf_value(origin, v)).sum();
+
+        sum
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let size = self.objects.len();
+
+        self.objects[random_int_range(&mut thread_rng(), 0, size as i32 - 1) as usize]
+            .random(origin)
     }
 }

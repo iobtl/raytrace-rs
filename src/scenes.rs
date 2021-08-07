@@ -9,7 +9,7 @@ use crate::instances::{FlipFace, RotateY, Translate};
 use crate::perlin::Perlin;
 use crate::rect::{Box, XYRect, XZRect, YZRect};
 use crate::sphere::Sphere;
-use crate::vec3::Color;
+use crate::vec3::{Color, Point3};
 use crate::volumes::Constant;
 use crate::{color, utility::*, ASPECT_RATIO};
 use crate::{
@@ -229,6 +229,7 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     objects.add(HitModel::FlipFace(FlipFace::new(HitModel::XZRect(XZRect::new(
         213.0, 343.0, 227.0, 332.0, 554.0, light,
     )))));
+
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(HitModel::XYRect(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
@@ -239,11 +240,14 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     let box1 = HitModel::Translate(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
     objects.add(box1);
 
-    let box2 =
-        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 165.0, 165.0), white));
-    let box2 = HitModel::RotateY(RotateY::new(box2, -18.0));
-    let box2 = HitModel::Translate(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
-    objects.add(box2);
+    // let box2 =
+    //     HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 165.0, 165.0), white));
+    // let box2 = HitModel::RotateY(RotateY::new(box2, -18.0));
+    // let box2 = HitModel::Translate(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    // objects.add(box2);
+
+    let glass = Surface::Dielectric(1.5);
+    objects.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, glass)));
 
     (objects, camera, background)
 }

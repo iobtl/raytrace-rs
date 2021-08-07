@@ -1,4 +1,7 @@
-use crate::pdf::random_cosine_direction;
+use rand::thread_rng;
+
+use crate::pdf::CosinePDF;
+use crate::pdf::PDF;
 use crate::texture::SurfaceTexture;
 use crate::texture::Texture;
 use crate::utility::*;
@@ -11,9 +14,16 @@ use crate::{hittable::HitRecord, ray::Ray, vec3::Color};
 // 1. Produce a scattered ray (or say it absorbed the incident ray)
 // 2. If scattered, determine how much the ray should be attenuated
 pub trait Material: Send + Sync {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color, f32)>;
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
     fn scattering_pdf(&self, ray: &Ray, rec: &HitRecord, scattered: &Ray) -> f32;
     fn emit(&self, ray: &Ray, rec: &HitRecord, u: f32, v: f32, p: &Point3) -> Color;
+}
+
+pub struct ScatterRecord<'a> {
+    pub specular_ray: Option<Ray>,
+    pub is_specular: bool,
+    pub attenuation: Color,
+    pub pdf: Option<PDF<'a>>,
 }
 
 #[derive(Copy, Clone)]
@@ -26,42 +36,32 @@ pub enum Surface<'a> {
 }
 
 impl<'a> Material for Surface<'a> {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Color, f32)> {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         match self {
             Self::Lambertian(albedo) => {
-                // Construct BRDF space.
-                let uvw = vec3::coordinate_system(&rec.normal);
-                let random_cos = random_cosine_direction(&mut rand::thread_rng());
-                let mut scatter_direction = uvw.local_vec(&random_cos);
+                let srec = ScatterRecord {
+                    specular_ray: None,
+                    is_specular: false,
+                    attenuation: albedo.value(rec.u, rec.v, &rec.p),
+                    pdf: Some(PDF::Cosine(CosinePDF::new(&rec.normal))),
+                };
 
-                // Catch degenerate scatter direction (almost exactly opposite to normal)
-                if scatter_direction.near_zero() {
-                    scatter_direction = rec.normal;
-                }
-
-                let scattered = Ray::new(rec.p, vec3::unit_vector(&scatter_direction), ray.time());
-                let alb = albedo.value(rec.u, rec.v, &rec.p);
-                // Importance sampling by allowing PDF to be equal to scattering_pdf. (cos_theta / PI)
-                let pdf = uvw.w().dot(scattered.direction()) / PI;
-
-                Some((scattered, alb, pdf))
+                Some(srec)
             }
             Self::Metal(albedo, fuzz) => {
                 let reflected = reflect(&unit_vector(ray.direction()), &rec.normal);
-                let scattered = Ray::new(
-                    rec.p,
-                    reflected + random_unit_sphere(&mut rand::thread_rng()) * *fuzz,
-                    ray.time(),
-                );
+                let srec = ScatterRecord {
+                    specular_ray: Some(Ray::new(
+                        rec.p,
+                        reflected + *fuzz * random_unit_sphere(&mut thread_rng()),
+                        0.0,
+                    )),
+                    is_specular: true,
+                    attenuation: *albedo,
+                    pdf: None, // delta distribution?
+                };
 
-                // Assume that metal absorbs all grazing rays.
-                if scattered.direction().dot(&rec.normal) <= 0.0 {
-                    return None;
-                }
-
-                let attenuation = *albedo;
-
-                Some((scattered, attenuation, 1.0))
+                Some(srec)
             }
             Self::Dielectric(refraction_index) => {
                 // Dielectric surfaces do not absorb light
@@ -82,9 +82,14 @@ impl<'a> Material for Surface<'a> {
                     refract(&unit_direction, &rec.normal, refraction_ratio)
                 };
 
-                let scattered = Ray::new(rec.p, direction, ray.time());
+                let srec = ScatterRecord {
+                    specular_ray: Some(Ray::new(rec.p, direction, ray.time())),
+                    is_specular: true,
+                    attenuation,
+                    pdf: None,
+                };
 
-                Some((scattered, attenuation, 1.0))
+                Some(srec)
             }
             Self::Isotropic(albedo) => {
                 // Isotropic volumes scatter light in random directions with certain probability
@@ -92,7 +97,15 @@ impl<'a> Material for Surface<'a> {
                     Ray::new(rec.p, random_unit_sphere(&mut rand::thread_rng()), ray.time());
                 let attenuation = albedo.value(rec.u, rec.v, &rec.p);
 
-                Some((scattered, attenuation, 1.0))
+                // TODO
+                let srec = ScatterRecord {
+                    specular_ray: None,
+                    is_specular: false,
+                    attenuation,
+                    pdf: None,
+                };
+
+                Some(srec)
             }
             _ => None,
         }

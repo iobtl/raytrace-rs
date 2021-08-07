@@ -8,6 +8,19 @@ pub fn process_color(pixel_color: Color, samples_per_pixel: i32) -> Color {
     let mut g = pixel_color.y();
     let mut b = pixel_color.z();
 
+    // Replace NaN components with zero to handle surface acne.
+    if r.is_nan() || r != r {
+        r = 0.0;
+    }
+
+    if g.is_nan() || g != g {
+        g = 0.0;
+    }
+
+    if b.is_nan() || b != b {
+        b = 0.0;
+    }
+
     // Divide color by number of samples and gamma-correct for gamma=2.0
     let scale = 1.0 / (samples_per_pixel as f32);
     r = (scale * r).sqrt();

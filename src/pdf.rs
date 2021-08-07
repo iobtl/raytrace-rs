@@ -1,11 +1,11 @@
-use std::f32::consts::PI;
+use std::f32::consts::{FRAC_1_PI, PI};
 
-use rand::prelude::ThreadRng;
+use rand::{prelude::ThreadRng, thread_rng};
 
 use crate::{
     hittable::{HitModel, Hittable, HittableList},
     onb::ONB,
-    utility::random_double,
+    utility::{random_double, random_in_hemipshere},
     vec3::{self, Point3, Vec3},
 };
 
@@ -25,6 +25,7 @@ pub fn random_cosine_direction(rng: &mut ThreadRng) -> Vec3 {
 }
 
 pub enum PDF<'a> {
+    Uniform(UniformPDF),
     Cosine(CosinePDF),
     Hittable(HittablePDF<'a>),
 }
@@ -32,6 +33,7 @@ pub enum PDF<'a> {
 impl PDF<'_> {
     pub fn value(&self, direction: &Vec3) -> f32 {
         match self {
+            Self::Uniform(p) => p.value(direction),
             Self::Cosine(p) => p.value(direction),
             Self::Hittable(p) => p.value(direction),
         }
@@ -39,9 +41,28 @@ impl PDF<'_> {
 
     pub fn generate(&self) -> Vec3 {
         match self {
+            Self::Uniform(p) => p.generate(),
             Self::Cosine(p) => p.generate(),
             Self::Hittable(p) => p.generate(),
         }
+    }
+}
+
+pub struct UniformPDF {
+    normal: Vec3,
+}
+
+impl UniformPDF {
+    pub fn new(n: &Vec3) -> Self {
+        UniformPDF { normal: *n }
+    }
+
+    pub fn value(&self, direction: &Vec3) -> f32 {
+        FRAC_1_PI / 2.0
+    }
+
+    pub fn generate(&self) -> Vec3 {
+        random_in_hemipshere(&mut thread_rng(), &self.normal)
     }
 }
 
@@ -70,11 +91,11 @@ impl CosinePDF {
 
 pub struct HittablePDF<'a> {
     origin: Point3,
-    hittable: &'a HitModel<'a>,
+    hittable: &'a HittableList<HitModel<'a>>,
 }
 
 impl<'a> HittablePDF<'a> {
-    pub fn new(origin: &Point3, hittable: &'a HitModel<'a>) -> Self {
+    pub fn new(origin: &Point3, hittable: &'a HittableList<HitModel<'a>>) -> Self {
         HittablePDF { origin: *origin, hittable }
     }
 

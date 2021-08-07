@@ -1,10 +1,12 @@
+use rand::thread_rng;
+
 use crate::{
     aabb::{self, AABB},
     hittable::{HitRecord, Hittable},
     material::Surface,
     ray::Ray,
-    utility::PI,
-    vec3::{Point3, Vec3},
+    utility::{random_to_sphere, PI},
+    vec3::{self, Point3, Vec3},
 };
 
 #[derive(Copy, Clone)]
@@ -64,6 +66,27 @@ impl Hittable for Sphere<'_> {
         let aabb = AABB::new(self.center - rad_vec, self.center + rad_vec);
 
         Some(aabb)
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f32 {
+        // TODO: inefficient? checking for another hit
+        if self.hit(&Ray::new(*origin, *v, 0.0), 0.001, f32::INFINITY).is_none() {
+            return 0.0;
+        }
+
+        let cos_theta_max =
+            1.0 - self.radius * self.radius / (self.center - *origin).length_squared();
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+
+        1.0 / solid_angle
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let direction = self.center - *origin;
+        let dist_squared = direction.length_squared();
+        let uvw = vec3::coordinate_system(&direction);
+
+        uvw.local_vec(&random_to_sphere(&mut thread_rng(), self.radius, dist_squared))
     }
 }
 
