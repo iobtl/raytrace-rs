@@ -26,7 +26,7 @@ pub mod volumes;
 use hittable::{HitModel, Hittable, HittableList};
 use material::Material;
 use ray::Ray;
-use vec3::{Color, Point3, Vec3};
+use vec3::{Color, Vec3};
 
 use crate::{
     color::process_color, material::Surface, rect::XZRect, sphere::Sphere, texture::SurfaceTexture,
@@ -37,7 +37,7 @@ use utility::*;
 const ASPECT_RATIO: f32 = 1.0;
 const IMG_WIDTH: u32 = 600;
 const IMG_HEIGHT: u32 = (IMG_WIDTH as f32 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: i32 = 1000;
+const SAMPLES_PER_PIXEL: i32 = 100;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color<'a>(
@@ -73,7 +73,7 @@ fn ray_color<'a>(
                 let pdf = mixed_pdf.value(scattered.direction());
 
                 emitted
-                    + srec.attenuation
+                    + srec.attenuation // 'reflectance'
                         * hit_rec.material.scattering_pdf(&r, &hit_rec, &scattered)
                         * ray_color(scattered, background, world, lights, depth - 1)
                         / pdf
@@ -96,7 +96,7 @@ fn main() -> io::Result<()> {
     let light = Surface::DiffuseLight(SurfaceTexture::Solid(Vec3::new(15.0, 15.0, 15.0)));
     let mut lights = Box::new(HittableList::new());
     lights.add(HitModel::XZRect(XZRect::new(213.0, 343.0, 227.0, 332.0, 554.0, light)));
-    lights.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, light)));
+    // lights.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, light)));
 
     let t0 = std::time::Instant::now();
     let pb = ProgressBar::new(IMG_HEIGHT.into());

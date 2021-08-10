@@ -5,7 +5,7 @@ use rand::{prelude::ThreadRng, thread_rng};
 use crate::{
     hittable::{HitModel, Hittable, HittableList},
     onb::ONB,
-    utility::{random_double, random_in_hemipshere},
+    utility::{random_double, random_in_hemisphere},
     vec3::{self, Point3, Vec3},
 };
 
@@ -62,7 +62,7 @@ impl UniformPDF {
     }
 
     pub fn generate(&self) -> Vec3 {
-        random_in_hemipshere(&mut thread_rng(), &self.normal)
+        random_in_hemisphere(&mut thread_rng(), &self.normal)
     }
 }
 

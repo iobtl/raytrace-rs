@@ -50,22 +50,29 @@ impl<'a> Material for Surface<'a> {
             }
             Self::Metal(albedo, fuzz) => {
                 let reflected = reflect(&unit_vector(ray.direction()), &rec.normal);
-                let srec = ScatterRecord {
-                    specular_ray: Some(Ray::new(
-                        rec.p,
-                        reflected + *fuzz * random_unit_sphere(&mut thread_rng()),
-                        0.0,
-                    )),
-                    is_specular: true,
-                    attenuation: *albedo,
-                    pdf: None, // delta distribution?
-                };
+                if reflected.dot(&rec.normal) > 0.0 {
+                    let srec = ScatterRecord {
+                        specular_ray: Some(Ray::new(
+                            rec.p,
+                            reflected
+                                + *fuzz
+                                    * random_in_hemisphere(&mut rand::thread_rng(), &rec.normal),
+                            0.0,
+                        )),
+                        is_specular: true,
+                        attenuation: *albedo,
+                        pdf: None,
+                    };
 
-                Some(srec)
+                    Some(srec)
+                } else {
+                    None
+                }
             }
             Self::Dielectric(refraction_index) => {
+                // TODO: implement reflection model incorporating Fresnel reflectance
                 // Dielectric surfaces do not absorb light
-                let attenuation = Vec3::new(1.0, 1.0, 1.0);
+                let attenuation = Color::new(1.0, 1.0, 1.0);
                 let refraction_ratio =
                     if rec.front_face { 1.0 / *refraction_index } else { *refraction_index };
 

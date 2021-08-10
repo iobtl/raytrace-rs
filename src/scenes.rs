@@ -234,20 +234,27 @@ pub fn cornell_box<'a>() -> (HittableList<HitModel<'a>>, Camera, Color) {
     objects.add(HitModel::XZRect(XZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
     objects.add(HitModel::XYRect(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
-    let box1 =
-        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 330.0, 165.0), white));
-    let box1 = HitModel::RotateY(RotateY::new(box1, 15.0));
-    let box1 = HitModel::Translate(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
-    objects.add(box1);
+    //let box1 =
+    //    HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 330.0, 165.0), white));
+    //let box1 = HitModel::RotateY(RotateY::new(box1, 15.0));
+    //let box1 = HitModel::Translate(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    //objects.add(box1);
 
-    // let box2 =
-    //     HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 165.0, 165.0), white));
-    // let box2 = HitModel::RotateY(RotateY::new(box2, -18.0));
-    // let box2 = HitModel::Translate(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
-    // objects.add(box2);
+    let aluminum = Surface::Metal(Color::new(0.8, 0.85, 0.88), 0.0);
+    let box_metal =
+        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 330.0, 165.0), aluminum));
+    let box_metal = HitModel::RotateY(RotateY::new(box_metal, 15.0));
+    let box_metal = HitModel::Translate(Translate::new(box_metal, Vec3::new(265.0, 0.0, 295.0)));
+    objects.add(box_metal);
 
-    let glass = Surface::Dielectric(1.5);
-    objects.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, glass)));
+    let box2 =
+        HitModel::Box(Box::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(165.0, 165.0, 165.0), white));
+    let box2 = HitModel::RotateY(RotateY::new(box2, -18.0));
+    let box2 = HitModel::Translate(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    objects.add(box2);
+
+    // let glass = Surface::Dielectric(1.5);
+    // objects.add(HitModel::Sphere(Sphere::new(Point3::new(190.0, 90.0, 190.0), 90.0, glass)));
 
     (objects, camera, background)
 }

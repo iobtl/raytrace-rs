@@ -71,7 +71,7 @@ pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
 }
 
 #[inline]
-pub fn random_in_hemipshere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
+pub fn random_in_hemisphere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_unit_sphere(rng);
     if in_unit_sphere.dot(normal) > 0.0 {
         // In same hemisphere as normal
