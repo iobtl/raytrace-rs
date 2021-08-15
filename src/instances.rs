@@ -144,9 +144,10 @@ impl<'a> Hittable for RotateY<'a> {
             hit_rec.p = new_p;
             let front_face = HitRecord::face_normal(&rotated_r, &new_normal);
             if front_face {
+                hit_rec.normal = new_normal;
                 Some(hit_rec)
             } else {
-                hit_rec.normal *= -1.0;
+                hit_rec.normal = -new_normal;
                 Some(hit_rec)
             }
         } else {
