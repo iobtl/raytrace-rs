@@ -81,8 +81,8 @@ impl<'a> RotateY<'a> {
                         let k = k as f32;
 
                         let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
-                        let y = j * bbox.max().y() + (1.0 - i) * bbox.min().y();
-                        let z = k * bbox.max().z() + (1.0 - i) * bbox.min().z();
+                        let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
+                        let z = k * bbox.max().z() + (1.0 - k) * bbox.min().z();
 
                         let new_x = cos_theta * x + sin_theta * z;
                         let new_z = -sin_theta * x + cos_theta * z;
